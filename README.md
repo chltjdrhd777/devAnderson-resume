@@ -1,25 +1,11 @@
-# Redux Toolkit TypeScript Example
+# next-ts-emotion-redux-toolkit 초기세팅!
 
-This example shows how to integrate Next.js with [Redux Toolkit](https://redux-toolkit.js.org).
+## 1. 레파지토리 설명
 
-The **Redux Toolkit** is a standardized way to write Redux logic (create actions and reducers, setup the store with some default middlewares like redux devtools extension). This example demonstrates each of these features with Next.js
+항상 계속해서 새로운 세팅을 하기가 너무 시간이 오래 걸렸고, 이번에 react 18로 업데이트되면서 한번 디폴트 세팅을 새롭게 만들 필요가 있었으므로 새롭게 제작합니다
 
-## Deploy your own
+next.js를 기반으로 typescript를 적용했으며
 
-Deploy the example using [Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=next-example):
+css로 emotionCSS를 도입했습니다.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/git/external?repository-url=https://github.com/vercel/next.js/tree/canary/examples/with-redux&project-name=with-redux&repository-name=with-redux)
-
-## How to use
-
-Execute [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) with [npm](https://docs.npmjs.com/cli/init) or [Yarn](https://yarnpkg.com/lang/en/docs/cli/create/) to bootstrap the example:
-
-```bash
-npx create-next-app --example with-redux with-redux-app
-# or
-yarn create next-app --example with-redux with-redux-app
-# or
-pnpm create next-app -- --example with-redux with-redux-app
-```
-
-Deploy it to the cloud with [Vercel](https://vercel.com/new?utm_source=github&utm_medium=readme&utm_campaign=next-example) ([Documentation](https://nextjs.org/docs/deployment)).
+전역 상태관리는 Redux toolkit을 적용하였고, 필요한 type 정의들을 store에 반영하였습니다.
