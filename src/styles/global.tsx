@@ -13,7 +13,7 @@ const globalCSS = css`
   }
   body {
     font-size: 1.6rem;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Roboto', sans-serif;
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;

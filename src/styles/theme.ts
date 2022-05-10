@@ -29,6 +29,23 @@ export const Md = (styling: SerializedStyles) => {
   `;
 };
 
+//cetering
+export const middle = css`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+export const centerRow = css`
+  display: flex;
+  justify-content: center;
+`;
+
+export const centerCol = css`
+  ${middle}
+  flex-direction: column;
+`;
+
 export type ModeType = 'white' | 'dark';
 
 export const themeMode = (mode: ModeType) =>
@@ -36,6 +53,9 @@ export const themeMode = (mode: ModeType) =>
     backgroundColor:
       mode === 'white' ? '#ffffff' : mode === 'dark' ? '#212021' : '',
     fontColor: mode === 'white' ? '#212021' : mode === 'dark' ? '#ffffff' : '',
+    middle,
+    centerRow,
+    centerCol,
   } as const);
 
 export type ThemeType = ReturnType<typeof themeMode>;
