@@ -8,6 +8,8 @@ const ModalPortal = dynamic(() => import('components/ModalPortal'), {
   ssr: false,
 });
 import PdfBtn from 'components/PdfBtn';
+import Content from 'components/Content';
+import GradientHeader from 'components/GradientHeader';
 
 // 배포시 env에 production이라면, 상태를 변경한다
 // 해당 상태에 따라서 class "site" 가 적용될지 안적용될지가 결정되고, site 클래스가 있으면
@@ -16,16 +18,9 @@ import PdfBtn from 'components/PdfBtn';
 const IndexPage: NextPage = () => {
   return (
     <Main>
-      <div className="container">
-        <h1>Hello World</h1>
-        <div></div>
+      <GradientHeader />
 
-        <div>
-          <a href="https://github.com/chltjdrhd777/my-record/issues">
-            this is my github
-          </a>
-        </div>
-      </div>
+      <Content />
 
       <ModalPortal>
         <PdfBtn />
@@ -37,31 +32,10 @@ const IndexPage: NextPage = () => {
 const Main = styled.main`
   min-width: 100vw;
   min-height: 100vh;
-
   color: ${colors.black};
-
-  & h1:hover {
-    background-color: red;
-  }
-
-  & button {
-    color: inherit;
-    background-color: ${colors.pointColorCarrot};
-    padding: 3rem;
-    margin: 2rem;
-  }
-
-  .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .box {
-    width: 50rem;
-    height: 50rem;
-    background-color: red;
-  }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 `;
 
 export default IndexPage;

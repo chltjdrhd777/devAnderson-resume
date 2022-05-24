@@ -13,7 +13,7 @@ const globalCSS = css`
   }
   body {
     font-size: 1.6rem;
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Noto Sans KR', sans-serif;
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -25,7 +25,7 @@ const globalCSS = css`
     color: black;
   }
   ul {
-    list-style-type: none;
+    /* list-style-type: none; */
   }
   img {
     -webkit-touch-callout: none;

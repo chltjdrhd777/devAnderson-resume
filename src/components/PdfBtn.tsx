@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styled from '@emotion/styled';
-import { css } from '@emotion/react';
 import { AiFillFilePdf } from 'react-icons/ai';
+import { GrInProgress } from 'react-icons/gr';
 import { colors } from 'styles/theme';
 import axios from 'axios';
 import { useProcess } from 'hooks/useProcess';
+import RoundLoading from 'components/Loading/Round';
 
 function PdfBtn() {
   const { process, startProcessing, setLoadingIndicator } = useProcess([
@@ -12,18 +13,6 @@ function PdfBtn() {
   ]);
 
   console.log(process);
-
-  function downloadPDF(buffer: Buffer, filename: string) {
-    const a = document.createElement('a');
-    const blobURL = URL.createObjectURL(
-      new Blob([buffer], { type: 'application/pdf' }),
-    );
-    a.href = blobURL;
-    a.download = filename + '.pdf';
-    a.click();
-
-    URL.revokeObjectURL(blobURL);
-  }
 
   async function handlePDFRequest() {
     try {
@@ -46,18 +35,40 @@ function PdfBtn() {
     }
   }
 
+  function downloadPDF(buffer: Buffer, filename: string) {
+    const a = document.createElement('a');
+    const blobURL = URL.createObjectURL(
+      new Blob([buffer], { type: 'application/pdf' }),
+    );
+    a.href = blobURL;
+    a.download = filename + '.pdf';
+    a.click();
+
+    URL.revokeObjectURL(blobURL);
+  }
+
   return (
-    <Button type="button" onClick={() => startProcessing(2000)}>
+    <Button
+      id="pdf-btn"
+      type="button"
+      onClick={() => {
+        startProcessing(100);
+      }}
+    >
       <div className="btn-container">
-        <AiFillFilePdf />
+        {process.isLoading ? (
+          <RoundLoading txt={<GrInProgress />} />
+        ) : (
+          <AiFillFilePdf />
+        )}
       </div>
     </Button>
   );
 }
 
 const Button = styled.button`
-  width: 5rem;
-  height: 5rem;
+  width: 6rem;
+  height: 6rem;
   border-radius: 100%;
   background-color: ${colors.grayOne};
   border: 1px solid ${colors.grayTwo};
@@ -68,8 +79,7 @@ const Button = styled.button`
 
   ${({ theme }) => theme.middle};
 
-  & > a,
-  .btn-container {
+  & > .btn-container {
     display: inline-block;
     width: 90%;
     height: 90%;

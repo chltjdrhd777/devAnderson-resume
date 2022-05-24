@@ -1,4 +1,4 @@
-import { css, SerializedStyles } from '@emotion/react';
+import { css, SerializedStyles, keyframes } from '@emotion/react';
 
 export const colors = {
   black: '#2b2b2b',
@@ -45,6 +45,24 @@ export const centerCol = css`
   ${middle}
   flex-direction: column;
 `;
+
+//! animations
+export const animations = {
+  rotate: keyframes`
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+  `,
+  fadeInOut: keyframes`
+       0%  {opacity: 0}
+       20% {opacity: 0}
+       50% {opacity: 1}
+       100%{opacity: 0}
+  `,
+};
 
 export type ModeType = 'white' | 'dark';
 

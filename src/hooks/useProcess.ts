@@ -52,7 +52,7 @@ export function useProcess(callbacks: Function[]) {
     });
   }
 
-  function startProcessing(resetDelay: number) {
+  async function startProcessing(resetDelay: number) {
     if (process.isLoading) return;
 
     setProcess(prev => {
@@ -61,7 +61,7 @@ export function useProcess(callbacks: Function[]) {
 
     try {
       for (let callback of callbacks) {
-        callback();
+        await callback();
       }
 
       setResultProcess('success', resetDelay);
