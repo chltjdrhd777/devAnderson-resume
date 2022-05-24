@@ -12,8 +12,6 @@ function PdfBtn() {
     handlePDFRequest,
   ]);
 
-  console.log(process);
-
   async function handlePDFRequest() {
     try {
       const res = await axios.get('api/pdf', {

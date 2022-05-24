@@ -18,15 +18,6 @@ function Content() {
       </p>
 
       <Skills>
-        <button
-          style={{ background: 'black', color: 'white', padding: '2rem' }}
-          onClick={async () => {
-            const response = await axios.get('/api/test');
-            console.log(response.data);
-          }}
-        >
-          hello
-        </button>
         <h2>
           Skills <span className="dot">.</span>
         </h2>

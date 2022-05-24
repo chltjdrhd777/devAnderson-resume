@@ -1,13 +1,15 @@
 import puppeteer from 'puppeteer';
+import chromium from 'chrome-aws-lambda';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   const browser = await puppeteer.launch();
+  const HOST = process.env.HOST;
 
   try {
     const page = await browser.newPage();
-    await page.goto('http://localhost:3000', {
-      waitUntil: ['domcontentloaded', 'load', 'networkidle0'],
+    await page.goto(HOST, {
+      waitUntil: ['domcontentloaded', 'load', 'networkidle2'],
     });
     await page.emulateMediaType('screen');
 
