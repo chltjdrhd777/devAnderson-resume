@@ -25,7 +25,7 @@ const globalCSS = css`
     color: black;
   }
   ul {
-    /* list-style-type: none; */
+    list-style-type: none;
   }
   img {
     -webkit-touch-callout: none;
@@ -40,6 +40,7 @@ const globalCSS = css`
     background-color: transparent;
     border-radius: 1rem;
     cursor: pointer;
+    &:active,
     &:focus {
       outline: none;
     }

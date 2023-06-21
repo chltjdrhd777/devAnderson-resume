@@ -1,5 +1,4 @@
 import { debounce } from 'helper/debounce';
-import * as React from 'react';
 import { useState, useEffect, useCallback } from 'react';
 
 function useScrollAnimation() {
@@ -17,6 +16,7 @@ function useScrollAnimation() {
   };
 
   useEffect(() => {
+    // 동일 이벤트는 discarded되므로, 여러번 호출되도 하나의 이벤트만 등록됌.
     document.addEventListener('scroll', onScroll);
   }, []);
 

@@ -6,19 +6,19 @@ import {
 
 import { configureStore } from '@reduxjs/toolkit';
 import { combineReducers } from 'redux';
-import userReducer from 'redux/userReducer';
+import userSlice from 'redux/userSlice';
 
 import storage from 'redux-persist/lib/storage';
 import { persistReducer } from 'redux-persist';
 
 ///////////////////////////////////////////////////
 const persistConfig = {
-  key: 'default',
+  key: 'root',
   storage,
 };
 
 const reducers = combineReducers({
-  user: userReducer,
+  user: userSlice.reducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, reducers);
@@ -33,3 +33,13 @@ export type AppState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 export const useSelector: TypedUseSelectorHook<AppState> = selector;
 export const useDispatch = () => dispatch<AppDispatch>();
+
+const actions = {
+  ...userSlice.actions,
+};
+export const useDispatcher = (targetAction: keyof typeof actions) => {
+  const dispatch = useDispatch();
+  const actionObj = actions[targetAction]();
+
+  return () => dispatch(actionObj);
+};

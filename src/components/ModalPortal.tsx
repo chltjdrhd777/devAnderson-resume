@@ -1,8 +1,11 @@
-import React, { PropsWithChildren } from 'react';
+import { PropsWithChildren } from 'react';
 import { createPortal } from 'react-dom';
 
-function ModalPortal({ children }: PropsWithChildren<{}>) {
-  const modalRoot = document.querySelector('#__next');
+function ModalPortal({
+  root,
+  children,
+}: PropsWithChildren<{ root?: Element }>) {
+  const modalRoot = root ?? document.querySelector('#__next');
 
   return createPortal(children, modalRoot);
 }

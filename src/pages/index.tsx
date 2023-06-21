@@ -17,25 +17,33 @@ import GradientHeader from 'components/GradientHeader';
 
 const IndexPage: NextPage = () => {
   return (
-    <Main>
+    <Wrapper>
       <GradientHeader />
+      <Main>
+        <Content />
 
-      <Content />
-
-      <ModalPortal>
-        <PdfBtn />
-      </ModalPortal>
-    </Main>
+        <ModalPortal>
+          <PdfBtn />
+        </ModalPortal>
+      </Main>
+    </Wrapper>
   );
 };
+
+const Wrapper = styled.div`
+  --header-height: 2.5rem;
+`;
 
 const Main = styled.main`
   min-width: 100vw;
   min-height: 100vh;
-  color: ${colors.black};
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  background-color: ${({ theme }) => theme.backgroundColor};
+  transition: background-color 0.3s ease-in;
+  color: ${({ theme }) => theme.fontColor};
+  padding-top: calc(var(--header-height));
+  padding-bottom: calc(var(--header-height) * 2);
+
+  ${({ theme }) => theme.centerCol};
 `;
 
 export default IndexPage;

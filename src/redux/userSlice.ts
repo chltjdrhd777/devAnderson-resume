@@ -8,7 +8,7 @@ export interface UserState {
 
 const initialState: UserState = {
   config: {
-    mode: 'dark',
+    mode: 'white',
   },
 };
 
@@ -16,15 +16,10 @@ export const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    test: state => {
-      if (state.config.mode === 'white') {
-        state.config.mode = 'dark';
-      } else {
-        state.config.mode = 'white';
-      }
+    toggleMode: state => {
+      state.config.mode = state.config.mode === 'white' ? 'dark' : 'white';
     },
   },
 });
 
-export const { test } = userSlice.actions;
-export default userSlice.reducer;
+export default userSlice;

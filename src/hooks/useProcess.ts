@@ -1,74 +1,88 @@
-import * as React from 'react';
-import { useRef } from 'react';
+import { useEffect } from 'react';
 import { useImmer } from 'use-immer';
 
 interface Process {
   isLoading: boolean;
   isError: boolean;
-  isDone: boolean;
+  isSuccess: boolean;
   loadingIndicator: number;
 }
 
-export function useProcess(callbacks: Function[]) {
-  const [process, setProcess] = useImmer<Process>({
+export function useProcess(callbacks: Function[] | Function) {
+  const initialState = {
     isLoading: false,
     isError: false,
-    isDone: false,
+    isSuccess: false,
     loadingIndicator: 0,
+  };
+
+  const [process, setProcess] = useImmer<Process>({
+    ...initialState,
   });
 
   function reset() {
-    setProcess(prev => {
-      prev.isLoading = false;
-      prev.isError = false;
-      prev.isDone = false;
-      prev.loadingIndicator = 0;
-    });
+    setProcess({ ...initialState });
   }
 
-  function setResultProcess(type: 'success' | 'fail', resetDelay: number) {
+  function setProcessResult(type: 'success' | 'fail') {
     if (type === 'success') {
       setProcess(prev => {
-        prev.isDone = true;
+        prev.isSuccess = true;
       });
-      setTimeout(() => {
-        reset();
-      }, resetDelay);
     }
 
     if (type === 'fail') {
       setProcess(prev => {
         prev.isError = true;
       });
-      setTimeout(() => {
-        reset();
-      }, resetDelay);
     }
+
+    // loading 종료
+    setProcess(prev => {
+      prev.isLoading = false;
+      prev.loadingIndicator = 0;
+    });
   }
 
   function setLoadingIndicator(value: number) {
     setProcess(prev => {
-      prev.loadingIndicator = value;
+      prev.loadingIndicator += value;
     });
   }
 
-  async function startProcessing(resetDelay: number) {
+  async function startProcessing(delay: number) {
+    //loading 중에는 추가적인 processing 제한.
     if (process.isLoading) return;
+
+    //첫 시작 시, 상태 초기화하고 시작하기.
+    reset();
 
     setProcess(prev => {
       prev.isLoading = true;
     });
 
+    await new Promise(resolve => {
+      const timerId = setInterval(() => setLoadingIndicator(1000), 1000);
+
+      setTimeout(() => {
+        clearInterval(timerId);
+        resolve('clear');
+      }, delay);
+    });
+
     try {
-      for (let callback of callbacks) {
-        await callback();
+      if (!Array.isArray(callbacks)) {
+        // 단일 함수가 인자로 들어와도 함수 배열로 처리되도록
+        callbacks = [callbacks as Function];
       }
 
-      setResultProcess('success', resetDelay);
+      for (let callback of callbacks) {
+        callback();
+      }
+      setProcessResult('success');
     } catch (err) {
-      console.log(err);
-
-      setResultProcess('fail', resetDelay);
+      console.log('callback 처리 중 에러가 발생했습니다', err);
+      setProcessResult('fail');
     }
   }
 

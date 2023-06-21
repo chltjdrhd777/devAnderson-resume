@@ -27,9 +27,6 @@ const LoadingBar = styled.div`
   height: 100%;
   border: 2px solid transparent;
   border-radius: 100%;
-
-  /* border-color: transparent ${colors.black} transparent ${colors.black}; */
-  /* animation: ${animations.rotate} 1.5s linear 0s infinite normal; */
 `;
 
 const LoadingText = styled.div`

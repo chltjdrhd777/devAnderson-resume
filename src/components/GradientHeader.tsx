@@ -1,53 +1,89 @@
 import React, { useEffect, useState } from 'react';
-import { colors } from 'styles/theme';
+import { colors, gradients } from 'styles/theme';
 import styled from '@emotion/styled';
 import useScrollAnimation from 'hooks/useScrollAnimation';
+import { useSelector, useDispatcher, AppState } from 'redux/store';
+import { css } from '@emotion/react';
 
 function GradientHeader() {
   const { scroll } = useScrollAnimation();
+  const toggleModeDispatcher = useDispatcher('toggleMode');
+  const toggleModeState = useSelector(state => state.user.config.mode);
+
+  const toggleModeHandler = () => {
+    toggleModeDispatcher();
+  };
 
   return (
     <Gradient className={scroll && 'faint'}>
-      <span>
-        created by <span>리엑트</span>
-        <a href="https://github.com/chltjdrhd777/my-record/issues">
-          "Click Here for more Info"
-        </a>
-      </span>
+      <Mode onClick={toggleModeHandler}>
+        <ToggleBtn mode={toggleModeState} />
+      </Mode>
     </Gradient>
   );
 }
 
 const Gradient = styled.div`
   width: 100%;
-  height: 3.5rem;
-  position: fixed;
-  background: linear-gradient(
-    to right,
-    ${colors.pointColorBlue},
-    ${colors.pointColorMint}
-  );
+  height: var(--header-height);
 
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  color: ${colors.starColor};
+  position: fixed;
   z-index: 10000;
 
-  & > span {
-    margin-right: 1rem;
-    font-size: 1.65rem;
-
-    & a {
-      color: ${colors.white};
-      margin-left: 0.5rem;
-    }
-  }
+  color: ${colors.starColor};
+  ${gradients.pointGraidentBlue};
 
   transition: opacity 0.2s ease-in-out;
   &.faint {
     opacity: 0.5;
   }
+
+  ${({ theme }) => theme.middle}
+  justify-content: flex-end;
+`;
+
+const Mode = styled.div`
+  --padding-side: 0.2rem;
+
+  width: 4.5rem;
+  height: 65%;
+  border-radius: 2rem;
+  margin-right: 0.5rem;
+  border: 2px solid white;
+  padding: 0 var(--padding-side);
+  box-sizing: initial;
+  cursor: pointer;
+  position: relative;
+
+  ${({ theme }) => theme.centerRow};
+`;
+
+type ToggleMode = AppState['user']['config']['mode'];
+interface ToggleBtnProps {
+  mode: ToggleMode;
+}
+function moveBtn(mode: ToggleMode) {
+  if (mode === 'white') {
+    return css`
+      transform: translateX(0);
+    `;
+  }
+
+  if (mode === 'dark') {
+    return css`
+      transform: translateX(3.35rem);
+    `;
+  }
+}
+const ToggleBtn = styled.div<ToggleBtnProps>`
+  height: 1.2rem;
+  width: 1.2rem;
+  background-color: white;
+  border-radius: 50%;
+  position: absolute;
+
+  transition: all 0.3s ease-in-out;
+  ${({ mode }) => moveBtn(mode)}
 `;
 
 export default GradientHeader;
