@@ -1,5 +1,7 @@
+import { css } from '@emotion/react';
 import styled from '@emotion/styled';
 import React from 'react';
+import { genMedia } from 'styles/theme';
 
 function Index() {
   const channelItemData = [
@@ -37,14 +39,16 @@ function Index() {
 
   return (
     <ChannelSection>
-      <h2 className="animate">Channel</h2>
-      <ul className="contactList">
+      <h2 className="animate">
+        Channel<span className="pointColor">.</span>
+      </h2>
+      <ul className="channelList">
         {channelItemData.map(data => (
           <li className="animate contactItem">
             <span className="icon">{data.icon}</span>
             <span className="link">
               {data.isLink ? (
-                <a className="underline" href={data.channel}>
+                <a target="_blank" className="underline" href={data.channel}>
                   {data.text}
                 </a>
               ) : (
@@ -59,13 +63,19 @@ function Index() {
 }
 
 const ChannelSection = styled.section`
-  & .contactList {
+  & .channelList {
     display: flex;
     flex-direction: column;
     font-weight: 500;
     color: ${({ theme }) => theme.fontColor};
 
     & li {
+      user-select: text;
+      -webkit-user-select: text;
+      -moz-user-select: text;
+      -ms-user-select: text;
+      -o-user-select: text;
+
       & .icon {
         margin-right: 1rem;
       }
@@ -74,6 +84,13 @@ const ChannelSection = styled.section`
         color: ${({ theme }) => theme.linkColor};
       }
     }
+
+    ${genMedia(
+      'web(1024px)',
+      css`
+        font-size: 1.85rem;
+      `,
+    )}
   }
 `;
 

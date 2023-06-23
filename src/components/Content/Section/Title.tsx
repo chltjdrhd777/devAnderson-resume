@@ -8,7 +8,7 @@ function Index() {
     <TitleSection>
       <div className="profile-title">
         <div className="profile animate">
-          <img src="/img/profile.jpg" alt="프로필 이미지" />
+          <div className="profileImage" />
         </div>
 
         <h1 className="title animate">
@@ -66,6 +66,8 @@ const TitleSection = styled.section`
       css`
         flex-direction: initial;
         align-items: center;
+        margin-top: 2.5rem;
+        margin-bottom: 2rem;
       `,
     )}
   }
@@ -78,11 +80,14 @@ const TitleSection = styled.section`
     ${({ theme }) => theme.middle};
     ${gradients.pointGraidentBlue};
 
-    & img {
-      width: 98%;
-      height: 98%;
+    & .profileImage {
+      width: 98.5%;
+      height: 98.5%;
       border-radius: 50%;
-      object-fit: cover;
+
+      background-image: url('/img/profile.jpg');
+      background-position: center;
+      background-size: 110%;
     }
   }
 

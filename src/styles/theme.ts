@@ -8,18 +8,24 @@ export const colors = {
   grayTwo: '#E5E5E5',
   grayThree: '#707070',
   grayFour: '#5a5a5a',
+  grayFive: '#9b9a97',
+  pointColorGray: '#596891bf',
   pointColorPurple: '#ad8bf6',
   pointColorYello: '#ffc114',
   pointColorCarrot: '#ff5248',
   pointColorBrown: '#E1AD49',
   pointColorMint: '#19cdca',
   pointColorBlue: '#4e80e1',
+  pointColorPastelBlue: '#4165c8bf',
   pointColorGreen: '#6ddb00',
+  pointColorGrapefruit: '#d55b10bf',
+  pointColorBluegrey: '#162d6cbf',
   lightblue: '#C5E2EE',
   footerColor: '#313131',
   mainColor: '#E7286A',
   waringColor: '#ff3838',
   starColor: '#fd4',
+  beige: '#f6d77d',
 } as const;
 
 export const gradients = {
@@ -33,7 +39,7 @@ export const gradients = {
 } as const;
 
 //breackpoint
-type DeviceSize =
+export type DeviceSize =
   | 'mobile(375px)'
   | 'tablet(768px)'
   | 'web(1024px)'
@@ -50,16 +56,6 @@ export const genMedia = (deviceSize: DeviceSize, styling: SerializedStyles) => {
 
   return css`
     @media screen and (min-width: ${sizes[targetSize]}) {
-      ${styling}
-    }
-  `;
-};
-
-export const Mobile = () => {};
-
-export const Tablet = (styling: SerializedStyles) => {
-  return css`
-    @media screen and (min-width: 768px) {
       ${styling}
     }
   `;
@@ -126,8 +122,9 @@ export const themeMode = (mode: ModeType) => {
     fontColor: mode === 'white' ? colors.black : colors.white,
     pointColor:
       mode === 'white' ? colors.pointColorBlue : colors.pointColorYello,
+    subPointColor: mode === 'white' ? colors.pointColorGray : colors.beige,
     linkColor:
-      mode === 'white' ? colors.pointColorGreen : colors.pointColorMint,
+      mode === 'white' ? colors.pointColorPastelBlue : colors.pointColorMint,
   } as const;
 
   return {
