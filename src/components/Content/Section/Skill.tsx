@@ -56,11 +56,11 @@ function Index() {
         <ul className="skillList mainList">
           {skillData.map(skill => (
             <li key={skill.key} className="skillItem hide-style">
-              <h4 className="">{skill.key}</h4>
+              <h4 className="animate">{skill.key}</h4>
               {
                 <ul className="stackList">
                   {skill.stackList.map(stack => (
-                    <li className=" stackItem fill-style">{stack}</li>
+                    <li className="animate stackItem fill-style">{stack}</li>
                   ))}
                 </ul>
               }
@@ -99,15 +99,12 @@ const SkillSection = styled.section`
         font-weight: 500;
         transform: translateY(0.15rem);
 
-        ${genMedia(
-          'tablet(768px)',
-          css`
-            display: flex;
-            row-gap: 1rem;
-            column-gap: 2rem;
-            flex-wrap: wrap;
-          `,
-        )};
+        @media screen and (min-width: 500px) {
+          display: flex;
+          row-gap: 0.8rem;
+          column-gap: 2.7rem;
+          flex-wrap: wrap;
+        }
 
         ${genMedia(
           'web(1024px)',
@@ -121,9 +118,21 @@ const SkillSection = styled.section`
             width: 0.25rem;
             height: 0.25rem;
             top: 1rem;
-          }
 
-          ${genMedia('web(1024px)', css``)}
+            ${genMedia(
+              'tablet(768px)',
+              css`
+                left: -1rem;
+              `,
+            )}
+
+            ${genMedia(
+              'web(1024px)',
+              css`
+                top: 1.2rem;
+              `,
+            )}
+          }
         }
       }
     }
