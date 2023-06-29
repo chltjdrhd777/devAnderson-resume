@@ -1,6 +1,6 @@
 import type { NextPage } from 'next';
 import styled from '@emotion/styled';
-import { colors } from 'styles/theme';
+import { colors, genMedia } from 'styles/theme';
 import React from 'react';
 import dynamic from 'next/dynamic';
 
@@ -10,6 +10,7 @@ const ModalPortal = dynamic(() => import('components/ModalPortal'), {
 import PdfBtn from 'components/PdfBtn';
 import Content from 'components/Content';
 import GradientHeader from 'components/GradientHeader';
+import { css } from '@emotion/react';
 
 // 배포시 env에 production이라면, 상태를 변경한다
 // 해당 상태에 따라서 class "site" 가 적용될지 안적용될지가 결정되고, site 클래스가 있으면
@@ -32,6 +33,12 @@ const IndexPage: NextPage = () => {
 
 const Wrapper = styled.div`
   --header-height: 2.5rem;
+  ${genMedia(
+    'web(1024px)',
+    css`
+      --header-height: 2.85rem;
+    `,
+  )}
 `;
 
 const Main = styled.main`

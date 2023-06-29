@@ -3,6 +3,7 @@ import styled from '@emotion/styled';
 import useMediaQuery from 'hooks/useMediaQuery';
 import React from 'react';
 import { genMedia } from 'styles/theme';
+import SectionFrame from '../SectionFrame';
 
 function Index() {
   const isWeb = useMediaQuery('web(1024px)');
@@ -45,7 +46,7 @@ function Index() {
             className="bold underline"
             href="https://velog.io/@chltjdrhd777/%EB%A6%AC%ED%8E%99%ED%86%A0%EB%A7%81...-%EA%B7%B8%EA%B2%83%EC%9D%80-%ED%95%84%EC%88%98-%EB%B6%88%EA%B0%80%EA%B2%B0%ED%95%9C-%EA%B2%83"
           >
-            (🧷후기 Link)
+            <span className="postscript">(🧷후기)</span>
           </a>
         </>,
         <>
@@ -79,21 +80,17 @@ function Index() {
           사이트 “마이메타갤러리” 웹페이지 개발 참여
         </>,
         <>
-          회원가입, 로그인 등의 본인인증 서비스 및{' '}
           <span className="bold underline">
-            Firebase Dynamic Link를 이용한 에이락 월렛 연동 기능 구현
-          </span>
+            회원가입, 로그인 등의 본인인증 서비스 구현
+          </span>{' '}
+          및 Firebase Dynamic Link를 이용한 에이락 월렛 연동 UI 구현
         </>,
       ],
     },
   ];
 
   return (
-    <WorkExperienceSection>
-      <h2>
-        Work Experience<span className="pointColor">.</span>
-      </h2>
-
+    <SectionFrame title="Work Experience" Section={WorkExperienceSection}>
       <div className="company">
         <div className="animate company-title">
           <img src="/img/alockIcon.png" alt="에이락 아이콘" />
@@ -102,8 +99,13 @@ function Index() {
 
         <div className="animate company-info">
           <div className="role">
-            <em>프론트엔드 개발자</em>
-            <em>(2022-05 ~ 2023-07)</em>
+            <em>Frontend Developer [개발 선임]</em>
+            <em className="time">
+              <span className="time">
+                (<time dateTime="2022-05">2022-05</time> ~{' '}
+                <time dateTime="2023-07">2023-07</time>)
+              </span>
+            </em>
           </div>
 
           <p className="info">
@@ -115,10 +117,10 @@ function Index() {
           </p>
         </div>
 
-        <div className="experienceList">
-          <ul className="experienceItem">
+        <div className="experience">
+          <ul className="experience-list mainList">
             {experienceData.map(data => (
-              <li>
+              <li key={data.term} className="hide-style">
                 <div className="title-term">
                   <h5 className="animate">
                     {data.title}
@@ -129,9 +131,13 @@ function Index() {
                   </div>
                 </div>
 
-                <ul className="experience">
-                  {data.workList.map(work => (
-                    <li className="animate">{work}</li>
+                <ul className="experience-description subList">
+                  <h5 className="animate">{data.title}</h5>
+
+                  {data.workList.map((work, idx) => (
+                    <li key={idx} className="animate">
+                      {work}
+                    </li>
                   ))}
                 </ul>
               </li>
@@ -139,7 +145,7 @@ function Index() {
           </ul>
         </div>
       </div>
-    </WorkExperienceSection>
+    </SectionFrame>
   );
 }
 
@@ -162,16 +168,6 @@ const WorkExperienceSection = styled.section`
         height: 2rem;
         margin-right: 0.4rem;
       }
-
-      & h3 {
-        font-size: 2rem;
-        ${genMedia(
-          'web(1024px)',
-          css`
-            font-size: 3rem;
-          `,
-        )}
-      }
     }
 
     & .company-info {
@@ -185,29 +181,36 @@ const WorkExperienceSection = styled.section`
 
       & .role {
         display: flex;
-        gap: 0.5rem;
+        flex-direction: column;
+        ${genMedia(
+          'tablet(768px)',
+          css`
+            flex-direction: row;
+            gap: 0.5rem;
+          `,
+        )}
 
         & em {
           color: ${({ theme }) => theme.subPointColor};
 
-          &:first-child {
+          &:first-of-type {
             font-weight: 700;
           }
         }
       }
 
       & .info {
-        margin-top: 0.5rem;
+        margin-top: 0.7rem;
         ${genMedia(
           'web(1024px)',
           css`
-            margin-top: 0.8rem;
+            margin-top: 1rem;
           `,
         )}
       }
     }
 
-    & .experienceList {
+    & .experience {
       display: flex;
       flex-direction: column;
       margin-top: 2.5rem;
@@ -218,19 +221,16 @@ const WorkExperienceSection = styled.section`
         `,
       )}
 
-      & .experienceItem {
+      & .experience-list {
         display: flex;
         flex-direction: column;
-        gap: 3.5rem;
-        ${genMedia(
-          'web(1024px)',
-          css`
-            gap: 4rem;
-          `,
-        )}
 
         & a {
           color: ${({ theme }) => theme.linkColor};
+        }
+
+        & .postscript {
+          word-break: keep-all;
         }
 
         & > li {
@@ -239,64 +239,45 @@ const WorkExperienceSection = styled.section`
             css`
               display: flex;
               width: 100%;
+            `,
+          )}
+        }
 
-              & .title-term {
-                min-width: 21.5rem;
-                & h5 {
-                  display: none;
-                }
-              }
-
-              & .experience {
-                margin-top: 0;
-                gap: 1.2rem;
+        & .title-term {
+          ${genMedia(
+            'web(1024px)',
+            css`
+              min-width: 21.5rem;
+              & h5 {
+                display: none;
               }
             `,
           )}
         }
 
-        h5 {
-          font-size: 1.6rem;
+        & .experience-description {
+          display: flex;
+          flex-direction: column;
+          margin-top: 0.9rem;
+          list-style-type: none;
+          transform: translateX(1.5rem);
 
           ${genMedia(
             'web(1024px)',
             css`
-              font-size: 2rem;
+              margin-top: 0;
             `,
           )}
-        }
 
-        & .term {
-          color: ${({ theme }) => theme.subPointColor};
-          font-weight: 500;
-        }
-
-        & .experience {
-          display: flex;
-          flex-direction: column;
-          margin-top: 0.9rem;
-          gap: 0.8rem;
-          list-style-type: none;
-          transform: translateX(1.5rem);
-
-          & li {
-            position: relative;
-          }
-
-          & li::before {
-            content: '';
-            width: 0.5rem;
-            height: 0.5rem;
-            border-radius: 50%;
-            border: 1px solid ${({ theme }) => theme.pointColor};
+          & h5 {
+            visibility: hidden;
             position: absolute;
-            left: -1.15rem;
-            top: 0.77rem;
 
             ${genMedia(
               'web(1024px)',
               css`
-                top: 1rem;
+                visibility: visible;
+                position: initial;
               `,
             )}
           }

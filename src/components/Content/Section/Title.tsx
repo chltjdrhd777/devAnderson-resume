@@ -12,7 +12,7 @@ function Index() {
         </div>
 
         <h1 className="title animate">
-          개발새싹에 물주는 <br className="title-br" /> 앤더손씨
+          개발새싹에 물주는 앤더손씨
           <span className="pointColor">.</span>
         </h1>
       </div>
@@ -100,9 +100,6 @@ const TitleSection = styled.section`
       'web(1024px)',
       css`
         font-size: 5rem;
-        & .title-br {
-          display: none;
-        }
       `,
     )}
   }

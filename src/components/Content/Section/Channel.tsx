@@ -2,6 +2,7 @@ import { css } from '@emotion/react';
 import styled from '@emotion/styled';
 import React from 'react';
 import { genMedia } from 'styles/theme';
+import SectionFrame from '../SectionFrame';
 
 function Index() {
   const channelItemData = [
@@ -38,13 +39,10 @@ function Index() {
   ];
 
   return (
-    <ChannelSection>
-      <h2 className="animate">
-        Channel<span className="pointColor">.</span>
-      </h2>
+    <SectionFrame title="Channel" Section={ChannelSection}>
       <ul className="channelList">
         {channelItemData.map(data => (
-          <li className="animate contactItem">
+          <li key={data.channel} className="animate contactItem hide-style">
             <span className="icon">{data.icon}</span>
             <span className="link">
               {data.isLink ? (
@@ -58,7 +56,7 @@ function Index() {
           </li>
         ))}
       </ul>
-    </ChannelSection>
+    </SectionFrame>
   );
 }
 

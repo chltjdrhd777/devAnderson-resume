@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { colors, gradients } from 'styles/theme';
+import { colors, genMedia, gradients } from 'styles/theme';
 import styled from '@emotion/styled';
 import useScrollAnimation from 'hooks/useScrollAnimation';
 import { useSelector, useDispatcher, AppState } from 'redux/store';
@@ -55,6 +55,13 @@ const Mode = styled.div`
   cursor: pointer;
   position: relative;
 
+  ${genMedia(
+    'web(1024px)',
+    css`
+      width: 5.5rem;
+    `,
+  )}
+
   ${({ theme }) => theme.centerRow};
 `;
 
@@ -72,6 +79,12 @@ function moveBtn(mode: ToggleMode) {
   if (mode === 'dark') {
     return css`
       transform: translateX(3.35rem);
+      ${genMedia(
+        'web(1024px)',
+        css`
+          transform: translateX(4.3rem);
+        `,
+      )}
     `;
   }
 }

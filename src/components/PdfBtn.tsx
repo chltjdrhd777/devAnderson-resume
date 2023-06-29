@@ -4,7 +4,7 @@ import {
   GrInProgress as TimerIcon,
   GrDocumentDownload as DownloadIcon,
 } from 'react-icons/gr';
-import { colors } from 'styles/theme';
+import { colors, genMedia } from 'styles/theme';
 import { useProcess } from 'hooks/useProcess';
 import RoundLoading from 'components/Loading/Round';
 import useScrollAnimation from 'hooks/useScrollAnimation';
@@ -89,6 +89,34 @@ const Button = styled.button<ButtonProps>`
           transform: scale(0.85);
           opacity: 0.5;
         `}
+
+  ${({ isScrolled, isLoading }) =>
+    isScrolled || isLoading
+      ? css`
+          transform: scale(1);
+          opacity: 1;
+        `
+      : css`
+          transform: scale(0.85);
+          opacity: 0.5;
+        `}
+
+  ${({ isScrolled, isLoading }) =>
+    genMedia(
+      'web(1024px)',
+      isScrolled || isLoading
+        ? css`
+            transform: scale(1.3);
+            right: 2.5rem;
+            bottom: 2.5rem;
+          `
+        : css`
+            transform: scale(1.1);
+            right: 2.5rem;
+            bottom: 2.5rem;
+          `,
+    )}
+
 
   ${({ theme }) => theme.middle};
 `;
