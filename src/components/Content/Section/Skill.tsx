@@ -60,7 +60,9 @@ function Index() {
               {
                 <ul className="stackList">
                   {skill.stackList.map(stack => (
-                    <li className="animate stackItem fill-style">{stack}</li>
+                    <li key={stack} className="animate stackItem fill-style">
+                      {stack}
+                    </li>
                   ))}
                 </ul>
               }

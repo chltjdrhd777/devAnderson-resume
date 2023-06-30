@@ -31,8 +31,6 @@ function PdfBtn() {
   const { process, startProcessing } = useProcess(downloadPDF);
   const { scroll } = useScrollAnimation();
 
-  useEffect(() => console.log(process));
-
   function onHandleClick() {
     startProcessing(DELAY);
   }

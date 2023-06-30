@@ -47,7 +47,7 @@ function Index() {
       <div className="education">
         <ul className="education-list mainList">
           {educationData.map(data => (
-            <li className="hide-style">
+            <li key={data.term} className="hide-style">
               <h5 className="animate">
                 {data.title}
                 <span className="pointColor">.</span>
