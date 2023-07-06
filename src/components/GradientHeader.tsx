@@ -8,7 +8,7 @@ import { css } from '@emotion/react';
 function GradientHeader() {
   const { scroll } = useScrollAnimation();
   const toggleModeDispatcher = useDispatcher('toggleMode');
-  const toggleModeState = useSelector(state => state.user.config.mode);
+  const toggleModeState = useSelector((state) => state.user.config.mode);
 
   const toggleModeHandler = () => {
     toggleModeDispatcher();
@@ -16,6 +16,9 @@ function GradientHeader() {
 
   return (
     <Gradient className={scroll && 'faint'}>
+      <Source target="blank" href="https://github.com/chltjdrhd777/devAnderson-resume">
+        Powered by devAnderson-resume
+      </Source>
       <Mode onClick={toggleModeHandler}>
         <ToggleBtn mode={toggleModeState} />
       </Mode>
@@ -42,6 +45,18 @@ const Gradient = styled.div`
   justify-content: flex-end;
 `;
 
+const Source = styled.a`
+  color: inherit;
+  margin-right: 1rem;
+  font-size: 1.5rem;
+  ${genMedia(
+    'web(1024px)',
+    css`
+      font-size: 1.7rem;
+    `,
+  )}
+`;
+
 const Mode = styled.div`
   --padding-side: 0.2rem;
 
@@ -66,9 +81,6 @@ const Mode = styled.div`
 `;
 
 type ToggleMode = AppState['user']['config']['mode'];
-interface ToggleBtnProps {
-  mode: ToggleMode;
-}
 function moveBtn(mode: ToggleMode) {
   if (mode === 'white') {
     return css`
@@ -88,7 +100,7 @@ function moveBtn(mode: ToggleMode) {
     `;
   }
 }
-const ToggleBtn = styled.div<ToggleBtnProps>`
+const ToggleBtn = styled.div<{ mode: ToggleMode }>`
   height: 1.2rem;
   width: 1.2rem;
   background-color: white;

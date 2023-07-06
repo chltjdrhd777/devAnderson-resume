@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { cloneElement } from 'react';
 import styled from '@emotion/styled';
 import { genMedia, gradients } from 'styles/theme';
 import useFadeInAnimation from 'hooks/useFadeInAnimation';
@@ -9,21 +9,28 @@ import WorkExperienceSection from 'components/Content/Section/WorkExperience';
 import EducationSection from 'components/Content/Section/Education';
 import SkillSection from 'components/Content/Section/Skill';
 import { css } from '@emotion/react';
+import { v4 as uuid } from 'uuid';
 
 function Content() {
   useFadeInAnimation();
 
+  const Devider = <Divider className="devider animate" />;
+  const Sections = [
+    <TitleSection />,
+    <ChannelSection />,
+    <WorkExperienceSection />,
+    <SkillSection />,
+    <EducationSection />,
+  ].reduce((acc, section, idx, Sections) => {
+    // Section들 사이에 Devider를 삽입.
+    acc.push(cloneElement(section, { key: idx }));
+    if (idx !== Sections.length - 1) acc.push(cloneElement(Devider, { key: uuid() }));
+    return acc;
+  }, []);
+
   return (
     <Container>
-      <TitleSection />
-      <Divider className="devider animate" />
-      <ChannelSection />
-      <Divider className="devider animate" />
-      <WorkExperienceSection />
-      <Divider className="devider animate" />
-      <SkillSection />
-      <Divider className="devider animate" />
-      <EducationSection />
+      {Sections}
       //개인프로젝트 부분 //article 부분 (블로그 강조할 부분 나타내기)
     </Container>
   );
@@ -187,5 +194,4 @@ const Divider = styled.div`
   ${gradients.pointGraidentBlue};
 `;
 
-const Skills = styled.section``;
 export default Content;

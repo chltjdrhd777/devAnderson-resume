@@ -16,13 +16,16 @@ import DrawingMemo from 'components/DrawingMemo';
 const IndexPage: NextPage = () => {
   return (
     <Wrapper>
-      <DrawingMemo />
       <GradientHeader />
+
       <Main>
+        <DrawingMemo />
         <Content />
 
         <ModalPortal>
-          <PdfBtn />
+          <Options>
+            <PdfBtn />
+          </Options>
         </ModalPortal>
       </Main>
     </Wrapper>
@@ -34,7 +37,7 @@ const Wrapper = styled.div`
   ${genMedia(
     'web(1024px)',
     css`
-      --header-height: 2.85rem;
+      --header-height: 3.2rem;
     `,
   )}
 `;
@@ -47,8 +50,25 @@ const Main = styled.main`
   color: ${({ theme }) => theme.fontColor};
   padding-top: calc(var(--header-height));
   padding-bottom: calc(var(--header-height) * 2);
+  position: relative;
 
   ${({ theme }) => theme.centerCol};
+`;
+
+const Options = styled.div`
+  ${({ theme }) => theme.centerCol};
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 10000;
+
+  ${genMedia(
+    'web(1024px)',
+    css`
+      right: 2.5rem;
+      bottom: 2.5rem;
+    `,
+  )}
 `;
 
 export default IndexPage;

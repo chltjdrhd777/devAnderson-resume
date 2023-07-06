@@ -3,45 +3,13 @@ import styled from '@emotion/styled';
 import React from 'react';
 import { genMedia } from 'styles/theme';
 import SectionFrame from '../SectionFrame';
+import { channelItemData } from 'components/Content/Data';
 
 function Index() {
-  const channelItemData = [
-    {
-      icon: '📞',
-      text: '010-4696-0919',
-      channel: '010-4696-0919',
-      isLink: false,
-    },
-    {
-      icon: '✉️',
-      text: 'chltjdrhd777@gmail.com',
-      channel: 'mailto:chltjdrhd777@gmail.com',
-      isLink: true,
-    },
-    {
-      icon: '🖋️',
-      text: 'Blog',
-      channel: 'https://velog.io/@chltjdrhd777',
-      isLink: true,
-    },
-    {
-      icon: '🐱',
-      text: 'Github',
-      channel: 'https://github.com/chltjdrhd777',
-      isLink: true,
-    },
-    {
-      icon: '🐱',
-      text: 'Git-Project',
-      channel: 'https://github.com/chltjdrhd777/TIL/projects/3',
-      isLink: true,
-    },
-  ];
-
   return (
     <SectionFrame title="Channel" Section={ChannelSection}>
       <ul className="channelList">
-        {channelItemData.map(data => (
+        {channelItemData.map((data) => (
           <li key={data.channel} className="animate contactItem hide-style">
             <span className="icon">{data.icon}</span>
             <span className="link">

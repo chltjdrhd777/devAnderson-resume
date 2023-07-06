@@ -1,9 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import styled from '@emotion/styled';
-import {
-  GrInProgress as TimerIcon,
-  GrDocumentDownload as DownloadIcon,
-} from 'react-icons/gr';
+import { GrInProgress as TimerIcon, GrDocumentDownload as DownloadIcon } from 'react-icons/gr';
 import { colors, genMedia } from 'styles/theme';
 import { useProcess } from 'hooks/useProcess';
 import RoundLoading from 'components/Loading/Round';
@@ -36,18 +33,9 @@ function PdfBtn() {
   }
 
   return (
-    <Button
-      id="pdf-btn"
-      onClick={onHandleClick}
-      isScrolled={scroll}
-      isLoading={process.isLoading}
-    >
+    <Button id="pdf-btn" onClick={onHandleClick} isScrolled={scroll} isLoading={process.isLoading}>
       <ButtonIconContainer>
-        {process.isLoading ? (
-          <RoundLoading txt={<TimerIcon />} />
-        ) : (
-          <DownloadIcon />
-        )}
+        {process.isLoading ? <RoundLoading txt={<TimerIcon />} /> : <DownloadIcon />}
       </ButtonIconContainer>
 
       <CircleSVG
@@ -71,23 +59,9 @@ const Button = styled.button<ButtonProps>`
   height: 5rem;
   border-radius: 100%;
   border: 1px solid ${colors.grayTwo};
-  position: fixed;
-  bottom: 1rem;
-  right: 1rem;
   overflow: hidden;
 
   transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
-  ${({ isScrolled, isLoading }) =>
-    isScrolled || isLoading
-      ? css`
-          transform: scale(1);
-          opacity: 1;
-        `
-      : css`
-          transform: scale(0.85);
-          opacity: 0.5;
-        `}
-
   ${({ isScrolled, isLoading }) =>
     isScrolled || isLoading
       ? css`
@@ -105,13 +79,9 @@ const Button = styled.button<ButtonProps>`
       isScrolled || isLoading
         ? css`
             transform: scale(1.3);
-            right: 2.5rem;
-            bottom: 2.5rem;
           `
         : css`
             transform: scale(1.1);
-            right: 2.5rem;
-            bottom: 2.5rem;
           `,
     )}
 
