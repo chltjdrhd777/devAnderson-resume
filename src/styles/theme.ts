@@ -30,20 +30,12 @@ export const colors = {
 
 export const gradients = {
   pointGraidentBlue: css`
-    background: linear-gradient(
-      to right,
-      ${colors.pointColorBlue},
-      ${colors.pointColorMint}
-    );
+    background: linear-gradient(to right, ${colors.pointColorBlue}, ${colors.pointColorMint});
   `,
 } as const;
 
 //breackpoint
-export type DeviceSize =
-  | 'mobile(375px)'
-  | 'tablet(768px)'
-  | 'web(1024px)'
-  | 'monitor(1440px)';
+export type DeviceSize = 'mobile(375px)' | 'tablet(768px)' | 'web(1024px)' | 'monitor(1440px)';
 export const genMedia = (deviceSize: DeviceSize, styling: SerializedStyles) => {
   const sizes = {
     mobile: '375px',
@@ -105,6 +97,16 @@ export const animations = {
        50% {opacity: 1}
        100%{opacity: 0}
   `,
+  popup: keyframes`
+    0% {
+      opacity:0; 
+      transform:scale(0);
+    }
+    100%{
+      opacity:1;
+      transform: scale(1);
+    }
+  `,
 };
 
 export type ModeType = 'white' | 'dark';
@@ -120,11 +122,9 @@ export const themeMode = (mode: ModeType) => {
   const modeCSS = {
     backgroundColor: mode === 'white' ? 'white' : colors.indigo,
     fontColor: mode === 'white' ? colors.black : colors.white,
-    pointColor:
-      mode === 'white' ? colors.pointColorBlue : colors.pointColorYello,
+    pointColor: mode === 'white' ? colors.pointColorBlue : colors.pointColorYello,
     subPointColor: mode === 'white' ? colors.pointColorGray : colors.beige,
-    linkColor:
-      mode === 'white' ? colors.pointColorPastelBlue : colors.pointColorMint,
+    linkColor: mode === 'white' ? colors.pointColorPastelBlue : colors.pointColorMint,
   } as const;
 
   return {

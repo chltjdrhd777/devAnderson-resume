@@ -7,11 +7,12 @@ import dynamic from 'next/dynamic';
 const ModalPortal = dynamic(() => import('components/ModalPortal'), {
   ssr: false,
 });
-import PdfBtn from 'components/PdfBtn';
+import PdfBtn from 'components/Button/PdfBtn';
 import Content from 'components/Content';
 import GradientHeader from 'components/GradientHeader';
 import { css } from '@emotion/react';
-import DrawingMemo from 'components/DrawingMemo';
+import MemoCanvas from 'components/MemoCanvas';
+import OpenCanvasBtn from 'components/Button/OpenCanvasBtn';
 
 const IndexPage: NextPage = () => {
   return (
@@ -19,11 +20,12 @@ const IndexPage: NextPage = () => {
       <GradientHeader />
 
       <Main>
-        <DrawingMemo />
+        <MemoCanvas />
         <Content />
 
         <ModalPortal>
           <Options>
+            <OpenCanvasBtn />
             <PdfBtn />
           </Options>
         </ModalPortal>
@@ -67,6 +69,7 @@ const Options = styled.div`
     css`
       right: 2.5rem;
       bottom: 2.5rem;
+      gap: 2rem;
     `,
   )}
 `;

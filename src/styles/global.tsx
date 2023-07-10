@@ -1,6 +1,14 @@
 import { Global, css } from '@emotion/react';
 
 const globalCSS = css`
+  @font-face {
+    font-family: 'NotoSansKR';
+    src: url('/fonts/NotoSans-Regular.woff') format('woff');
+    font-style: normal;
+    font-weight: normal;
+    font-display: '';
+  }
+
   * {
     margin: 0;
     padding: 0;
@@ -14,7 +22,7 @@ const globalCSS = css`
   }
   body {
     font-size: 1.6rem;
-    font-family: 'Noto Sans KR', sans-serif;
+    font-family: 'NotoSansKR', sans-serif;
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;

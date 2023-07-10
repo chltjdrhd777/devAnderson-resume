@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import styled from '@emotion/styled';
 import { GrInProgress as TimerIcon, GrDocumentDownload as DownloadIcon } from 'react-icons/gr';
 import { colors, genMedia } from 'styles/theme';

@@ -2,16 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { colors, genMedia, gradients } from 'styles/theme';
 import styled from '@emotion/styled';
 import useScrollAnimation from 'hooks/useScrollAnimation';
-import { useSelector, useDispatcher, AppState } from 'redux/store';
+import { useSelector, AppState, useDispatch, actions } from 'redux/store';
 import { css } from '@emotion/react';
 
 function GradientHeader() {
+  const dispatch = useDispatch();
   const { scroll } = useScrollAnimation();
-  const toggleModeDispatcher = useDispatcher('toggleMode');
   const toggleModeState = useSelector((state) => state.user.config.mode);
 
   const toggleModeHandler = () => {
-    toggleModeDispatcher();
+    dispatch(actions.toggleMode());
   };
 
   return (
