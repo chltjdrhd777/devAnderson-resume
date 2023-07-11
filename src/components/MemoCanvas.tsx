@@ -1,10 +1,12 @@
 import { css } from '@emotion/react';
 import styled from '@emotion/styled';
 import { debounce } from 'helper/debounce';
+import { checkMobile } from 'helper/checkMobile';
 import React, { useEffect, useRef, useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import { memoCanvasConfig } from 'recoil/memo';
 import { colors } from 'styles/theme';
+import { integerDiff } from 'helper/checkDiff';
 
 function MemoCanvas() {
   //bugfix
@@ -16,21 +18,31 @@ function MemoCanvas() {
   // 선 색 바꾸기
   // 지우개
   // 그려넣어진 내용 화면 크기 변경에 따라 위치 조정 및 비율조정
-
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const drawPath = useRef<ImageData[]>([]);
-  const canvasCtx = useRef<CanvasRenderingContext2D | null>(null);
-
   const isCanvasOpen = useRecoilValue(memoCanvasConfig).isCanvasOpen;
-  const [isDrawing, setIsDrawing] = useState(false);
+  const isMobile = checkMobile();
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const canvasCtx = useRef<CanvasRenderingContext2D | null>(null);
   const [contextConfig, setContextConfig] = useState<Partial<CanvasRenderingContext2D>>({
     strokeStyle: colors.black,
     lineWidth: 1.3,
     lineCap: 'round',
   });
 
-  const startDrawing = () => {
+  const drawPath = useRef<ImageData[]>([]);
+  const drawDataUrlPath = useRef<string[]>([]);
+  const drawStartCoord = useRef<{ x: number | null; y: number | null }>({ x: null, y: null });
+  const [isDrawing, setIsDrawing] = useState(false);
+
+  const resetDrawing = () => {
+    setIsDrawing(false);
+    drawStartCoord.current = { x: null, y: null };
+  };
+
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
     setIsDrawing(true);
+    const x = e.nativeEvent.pageX;
+    const y = e.nativeEvent.pageY;
+    drawStartCoord.current = { x, y };
   };
   const startDrawingForMobile = (e: React.TouchEvent<HTMLCanvasElement>) => {
     setIsDrawing(true);
@@ -40,7 +52,9 @@ function MemoCanvas() {
 
     context?.beginPath();
     context?.moveTo(x, y);
+    drawStartCoord.current = { x, y };
   };
+
   const onDrawing = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
     const context = canvasCtx.current;
     const x = e.nativeEvent.pageX;
@@ -71,15 +85,55 @@ function MemoCanvas() {
   };
   canvasRef.current?.addEventListener('touchmove', onDrawingForMobile, { passive: false }); //모바일은 터치드래그 막아야하므로 "e.preventDefault() 해주기 위하여 passive를 false로 둔다."
 
-  const stopDrawing = () => {
-    if (isDrawing) {
-      // resize를 하면 canvas의 크기가 바껴 imageData가 사라지기에, 해당 Data를 ref에 기록해둔다.
-      const canvas = canvasRef.current;
-      const context = canvasCtx.current;
-      drawPath.current.push(context?.getImageData(0, 0, canvas.width, canvas.height));
+  const saveDrawing = () => {
+    // resize를 하면 canvas의 크기가 바껴 imageData가 사라지기에, 해당 Data를 ref에 기록해둔다.
+    const canvas = canvasRef.current;
+    const context = canvasCtx.current;
+
+    const canvasDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+    drawDataUrlPath.current.push(canvasDataUrl);
+    const key = 'testKey';
+    localStorage.setItem(key, JSON.stringify(drawDataUrlPath.current));
+
+    drawPath.current.push(context?.getImageData(0, 0, canvas.width, canvas.height));
+  };
+
+  const stopDrawing = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
+    if (isMobile) {
+      return; //debugger 환경에서 touchEnd와 같이 발생하는 부분을 막기 위함.
     }
 
-    setIsDrawing(false);
+    const endX = e.pageX;
+    const endY = e.pageY;
+    const { x: startX, y: startY } = drawStartCoord.current;
+
+    if (integerDiff(endX, startX) !== 0 || integerDiff(endY, startY) !== 0) {
+      saveDrawing();
+    }
+
+    resetDrawing();
+  };
+
+  const stopDrawingForMobile = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    const endX = e.changedTouches[0]?.pageX;
+    const endY = e.changedTouches[0]?.pageY;
+    const { x: startX, y: startY } = drawStartCoord.current;
+
+    if (
+      (e.changedTouches !== undefined && e.changedTouches.length !== 0 && integerDiff(endX, startX) !== 0) ||
+      integerDiff(endY, startY) !== 0
+    ) {
+      saveDrawing();
+    }
+
+    resetDrawing();
+  };
+
+  const onMouseLeave = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
+    const { x, y } = drawStartCoord.current;
+    if (x !== null && y !== null) {
+      stopDrawing(e);
+    }
   };
 
   const redraw = () => {
@@ -126,11 +180,11 @@ function MemoCanvas() {
         onMouseMove={onDrawing}
         onMouseDown={startDrawing}
         onMouseUp={stopDrawing}
-        onMouseLeave={stopDrawing}
+        onMouseLeave={onMouseLeave}
         // onTouchMove={onDrawingForMobile}
         onTouchStart={startDrawingForMobile}
-        onTouchEnd={stopDrawing}
-        onTouchCancel={stopDrawing}
+        onTouchEnd={stopDrawingForMobile}
+        onTouchCancel={stopDrawingForMobile}
         onContextMenu={(e) => e.preventDefault()}
       />
     </CanvasFrame>
