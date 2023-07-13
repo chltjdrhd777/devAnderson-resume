@@ -7,6 +7,8 @@ import { useRecoilValue } from 'recoil';
 import { memoCanvasConfig } from 'recoil/memo';
 import { colors } from 'styles/theme';
 import { integerDiff } from 'helper/checkDiff';
+import { converURIToImageData } from 'helper/converURIToImageData';
+import useIndexedDB, { tableEnum } from 'hooks/useIndexedDB';
 
 function MemoCanvas() {
   //bugfix
@@ -32,8 +34,9 @@ function MemoCanvas() {
   const drawDataUrlPath = useRef<string[]>([]);
   const drawStartCoord = useRef<{ x: number | null; y: number | null }>({ x: null, y: null });
   const [isDrawing, setIsDrawing] = useState(false);
+  const { saveTransaction, getLastValueFromTable } = useIndexedDB({ dbName: 'resume-indexedDB' });
 
-  const resetDrawing = () => {
+  const resetDrawingData = () => {
     setIsDrawing(false);
     drawStartCoord.current = { x: null, y: null };
   };
@@ -87,15 +90,31 @@ function MemoCanvas() {
 
   const saveDrawing = () => {
     // resize를 하면 canvas의 크기가 바껴 imageData가 사라지기에, 해당 Data를 ref에 기록해둔다.
+    // 배열로 저장해서 기록하는 이유는, ctrl+Z 를 구현하기 위함이다. (항상 캔버스 마지막이 가장 최근 스냅샷 데이터임)
     const canvas = canvasRef.current;
     const context = canvasCtx.current;
-
-    const canvasDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-    drawDataUrlPath.current.push(canvasDataUrl);
-    const key = 'testKey';
-    localStorage.setItem(key, JSON.stringify(drawDataUrlPath.current));
-
     drawPath.current.push(context?.getImageData(0, 0, canvas.width, canvas.height));
+
+    // 나중에 새로고침해도 저장된 데이터를 불러올 수 있도록 indexedDB에 저장한다.
+    // 이미지 자체를 저장하면 너무 크기 때문에 dataURL로 변환하여 관리한다.
+
+    // 기존
+    // const canvasDataUrl = canvas.toDataURL();
+    // drawDataUrlPath.current.push(canvasDataUrl);
+    // const key = 'memoData';
+    // localStorage.setItem(key, JSON.stringify(drawDataUrlPath.current));
+
+    // indexedDB
+    const canvasDataUrl = canvas.toDataURL();
+    drawDataUrlPath.current.push(canvasDataUrl);
+    saveTransaction(
+      tableEnum.MEMO,
+      {
+        snapshot: 'snapshot',
+        dataURL: JSON.stringify(drawDataUrlPath.current),
+      },
+      'put',
+    );
   };
 
   const stopDrawing = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
@@ -108,10 +127,11 @@ function MemoCanvas() {
     const { x: startX, y: startY } = drawStartCoord.current;
 
     if (integerDiff(endX, startX) !== 0 || integerDiff(endY, startY) !== 0) {
+      //만약 그냥 제자리 클릭이 아닐 경우, 드로잉 했던 내용 기록
       saveDrawing();
     }
 
-    resetDrawing();
+    resetDrawingData();
   };
 
   const stopDrawingForMobile = (e: React.TouchEvent<HTMLCanvasElement>) => {
@@ -123,10 +143,11 @@ function MemoCanvas() {
       (e.changedTouches !== undefined && e.changedTouches.length !== 0 && integerDiff(endX, startX) !== 0) ||
       integerDiff(endY, startY) !== 0
     ) {
+      //만약 그냥 제자리 클릭이 아닐 경우, 드로잉 했던 내용 기록
       saveDrawing();
     }
 
-    resetDrawing();
+    resetDrawingData();
   };
 
   const onMouseLeave = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
@@ -140,13 +161,13 @@ function MemoCanvas() {
     const canvas = canvasRef.current;
     const context = canvasCtx.current;
     context?.clearRect(0, 0, canvas.width, canvas.height);
-    drawPath.current?.forEach((imageData) => {
-      //todo 둘째, 세째 인자가 드로잉되는 위치 조정값임
-      // 따라서, window의 innerWidth를 기록하고 있다가
-      // resize 발생 시, reDraw에 이벤트 객체 내의 innerWidth 보내서
-      // 기록하고 있었던 기존 window 사이즈와 비교하여 x, y포지션 설정하면 된다.
-      context?.putImageData(imageData, 0, 0);
-    });
+    // drawPath.current?.forEach((imageData) => {
+    //   context?.putImageData(imageData, 0, 0);
+    // });
+    const lastDrawing = drawPath.current[drawPath.current.length - 1];
+    if (lastDrawing) {
+      context?.putImageData(lastDrawing, 0, 0);
+    }
   };
 
   useEffect(() => {
@@ -166,6 +187,17 @@ function MemoCanvas() {
       debounce(redraw, 500)();
     };
     updateCanvasSize();
+
+    // const memoData = localStorage.getItem('memoData');
+
+    // if (memoData) {
+    //   const uriList: string[] = JSON.parse(memoData);
+
+    //   converURIToImageData(uriList[uriList.length - 1]).then((data) => {
+    //     console.log('imageData', data);
+    //     drawPath.current.push(data);
+    //   });
+    // }
 
     window.addEventListener('resize', updateCanvasSize);
     return () => {

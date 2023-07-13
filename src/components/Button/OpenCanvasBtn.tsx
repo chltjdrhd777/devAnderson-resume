@@ -1,7 +1,7 @@
 import React from 'react';
 import Option from './Molecule/Option';
 import { memoCanvasConfig } from 'recoil/memo';
-import useRecoilImmerState from 'recoil/useImmerState';
+import useRecoilImmerState from 'hooks/useImmerState';
 import { GoPencil } from 'react-icons/go';
 import { AiOutlineCheck } from 'react-icons/ai';
 import { css } from '@emotion/css';

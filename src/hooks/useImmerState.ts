@@ -2,7 +2,7 @@ import { RecoilState, useRecoilState } from 'recoil';
 import { produce, Draft } from 'immer';
 import { useCallback } from 'react';
 
-type DraftFunction<T> = (draft: Draft<T>) => Draft<T>; // setState의 함수형 방식의 형태를 타입지정.
+export type DraftFunction<T> = (draft: Draft<T>) => Draft<T>; // setState의 함수형 방식의 형태를 타입지정.
 export default function useRecoilImmerState<T>(atom: RecoilState<T>) {
   // setState => immer가 적용된 함수로 변환하여 리턴하는 훅.
   const [state, setState] = useRecoilState(atom);
