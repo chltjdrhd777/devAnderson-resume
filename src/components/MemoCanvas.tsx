@@ -7,19 +7,20 @@ import { useRecoilValue } from 'recoil';
 import { memoCanvasConfig } from 'recoil/memo';
 import { colors } from 'styles/theme';
 import { integerDiff } from 'helper/checkDiff';
-import { converURIToImageData } from 'helper/converURIToImageData';
+import { converURLToImageData } from 'helper/converURLToImageData';
 import useIndexedDB, { tableEnum } from 'hooks/useIndexedDB';
 
 function MemoCanvas() {
   //bugfix
   // 2. 현재 drawing을 하고 안하고 기준으로 메모가 보이는데, 메모 보는 옵션에 따라 보이고 안보이고로 수정해야 함.
-  // 3. 해당 메모 안보이고는 캐싱되는 게 맞아서, 리덕스 저장. 메모했던 내용도 리덕스 저장해서 불러와지는지 확인해야 함.
 
   // todo 텍스트 넣기 기능 추가
   // 선 굵기 바꾸기
   // 선 색 바꾸기
   // 지우개
-  // 그려넣어진 내용 화면 크기 변경에 따라 위치 조정 및 비율조정
+  // ctrl + Z (진짜 ctrl+z도 되고, 버튼으로도 되고)
+  // 전부 지우기
+
   const isCanvasOpen = useRecoilValue(memoCanvasConfig).isCanvasOpen;
   const isMobile = checkMobile();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -27,7 +28,7 @@ function MemoCanvas() {
   const [contextConfig, setContextConfig] = useState<Partial<CanvasRenderingContext2D>>({
     strokeStyle: colors.black,
     lineWidth: 1.3,
-    lineCap: 'round',
+    lineCap: 'butt',
   });
 
   const drawPath = useRef<ImageData[]>([]);
@@ -52,10 +53,12 @@ function MemoCanvas() {
     const context = canvasCtx.current;
     const x = e.touches[0].pageX;
     const y = e.touches[0].pageY;
+    drawStartCoord.current = { x, y };
 
+    // 움직일때마다 x,y가 결정되는 마우스 이벤트와 다르게, 모바일은 터치하는 순간 x,y가 결정되니까
+    // 그 x,y를 터치 순간에 업데이트 시켜서 초기점으로 설정하는 로직이 필요하다.
     context?.beginPath();
     context?.moveTo(x, y);
-    drawStartCoord.current = { x, y };
   };
 
   const onDrawing = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
@@ -74,9 +77,6 @@ function MemoCanvas() {
     }
   };
   const onDrawingForMobile = (e: TouchEvent) => {
-    // 마우스 이벤트와 다르게, 모바일은 터치하는 순간 x,y가 결정되니까
-    // 그 x,y를 터치 순간에 업데이트 시켜서 초기점으로 설정하는 로직이 필요하다
-    // onDrawing 함수에 통일시킬 경우, 관심사가 분리가 되지 않으므로 따로 핸들러를 분리해서 관리한다.
     if (isDrawing && isCanvasOpen) {
       e.preventDefault();
       const context = canvasCtx.current;
@@ -86,35 +86,28 @@ function MemoCanvas() {
       context?.stroke();
     }
   };
-  canvasRef.current?.addEventListener('touchmove', onDrawingForMobile, { passive: false }); //모바일은 터치드래그 막아야하므로 "e.preventDefault() 해주기 위하여 passive를 false로 둔다."
+  // 모바일은 터치드래그 막아야하므로 "e.preventDefault() 해주기 위하여 passive를 false로 둔다."
+  // passive[default : true] = 모바일 환경에서 부드러운 스크롤 위해 스크롤 처리 미리하도록 함. 이게 true일 경우, preventDefault 사용 불가.
+  canvasRef.current?.addEventListener('touchmove', onDrawingForMobile, { passive: false });
 
   const saveDrawing = () => {
     // resize를 하면 canvas의 크기가 바껴 imageData가 사라지기에, 해당 Data를 ref에 기록해둔다.
-    // 배열로 저장해서 기록하는 이유는, ctrl+Z 를 구현하기 위함이다. (항상 캔버스 마지막이 가장 최근 스냅샷 데이터임)
     const canvas = canvasRef.current;
     const context = canvasCtx.current;
-    drawPath.current.push(context?.getImageData(0, 0, canvas.width, canvas.height));
-
-    // 나중에 새로고침해도 저장된 데이터를 불러올 수 있도록 indexedDB에 저장한다.
-    // 이미지 자체를 저장하면 너무 크기 때문에 dataURL로 변환하여 관리한다.
-
-    // 기존
-    // const canvasDataUrl = canvas.toDataURL();
-    // drawDataUrlPath.current.push(canvasDataUrl);
-    // const key = 'memoData';
-    // localStorage.setItem(key, JSON.stringify(drawDataUrlPath.current));
+    const imageData = context?.getImageData(0, 0, canvas.width, canvas.height);
+    drawPath.current.push(imageData);
 
     // indexedDB
-    const canvasDataUrl = canvas.toDataURL();
-    drawDataUrlPath.current.push(canvasDataUrl);
-    saveTransaction(
-      tableEnum.MEMO,
-      {
-        snapshot: 'snapshot',
-        dataURL: JSON.stringify(drawDataUrlPath.current),
-      },
-      'put',
-    );
+    // 저장 당시에는, 모든 이미지가 저장될 이유가 없음
+    // 항상 지금 오는 내용으로 저장하게만 만들면 된다
+    // 보기 버튼이 활성화되어있고, 캔버스 오픈 상태가 아닐때만 readOnly 컴포넌트가 떠있게 한다
+    // const canvasDataUrl = canvas.toDataURL();
+    // drawDataUrlPath.current.push(canvasDataUrl);
+    const saveData = {
+      id: drawPath.current.length,
+      dataURL: imageData,
+    };
+    saveTransaction(tableEnum.memo, saveData, 'put');
   };
 
   const stopDrawing = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
@@ -175,6 +168,7 @@ function MemoCanvas() {
     const parentElement = canvas.parentElement;
 
     const context = canvas.getContext('2d', { willReadFrequently: true });
+    context.imageSmoothingEnabled = true;
     context.strokeStyle = contextConfig.strokeStyle;
     context.lineWidth = contextConfig.lineWidth;
     context.lineCap = contextConfig.lineCap;
@@ -232,7 +226,7 @@ const CanvasFrame = styled.div<{ isCanvasOpen: boolean }>`
 
   z-index: -9000;
   opacity: 0;
-  transition: visibility 0.3s ease-in;
+  transition: opacity 0.1s ease-in;
 
   ${({ isCanvasOpen }) =>
     isCanvasOpen &&

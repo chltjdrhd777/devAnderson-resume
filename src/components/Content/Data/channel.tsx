@@ -12,9 +12,9 @@ export const channelItemData = [
     isLink: true,
   },
   {
-    icon: '🖋️',
-    text: 'Blog',
-    channel: 'https://velog.io/@chltjdrhd777',
+    icon: '🐱',
+    text: 'Git-Project',
+    channel: 'https://github.com/users/chltjdrhd777/projects/3/views/1',
     isLink: true,
   },
   {
@@ -24,9 +24,9 @@ export const channelItemData = [
     isLink: true,
   },
   {
-    icon: '🐱',
-    text: 'Git-Project',
-    channel: 'https://github.com/users/chltjdrhd777/projects/3/views/1',
+    icon: '🖋️',
+    text: 'Blog',
+    channel: 'https://velog.io/@chltjdrhd777',
     isLink: true,
   },
 ];

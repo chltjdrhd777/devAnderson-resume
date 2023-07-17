@@ -1,10 +1,10 @@
-export function converURIToImageData(uri: string) {
+export function converURLToImageData(url: string) {
   return new Promise<ImageData>((resolve, reject) => {
-    if (!uri) return reject();
+    if (!url) return reject();
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     const image = new Image();
-    image.src = uri;
+    image.src = url;
     image.addEventListener(
       'load',
       () => {
