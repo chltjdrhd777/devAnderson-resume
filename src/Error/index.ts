@@ -1,8 +1,8 @@
 // 해당 로직 작성 이유
-// 그냥 부모 로직에서 한번에 try~catch 로 잡아서 처리해도 되지만,
-// 각 비동기 및 에러 예상되는 함수 호출 시 커스텀한 에러 객체로 구분하여 에러처리하고싶었다.
-// 의식의 흐름대로 쓰자면, 예를 들어 아 그래 내가 함수 호출해서 에러 내보고 catch에서 에러 처리할 수도 있겠지. 근데 언제 그걸 다 확인하고, 무슨 에런지 확신할 수 있겠어
-// 그러니 그냥 특정 로직에서 발생하는 에러를 내가 확정지어서 관리하자. 라고 생각함.
+// 로직을 작성하다 보니, indexedDB의 메서드 에러는 onError 콜백으로 잡히는 게 아니라 바로 thorw되어 에러 바운더리가 필요함을 알게 되었다.
+// 이로 인해, 불필요하게 indexedDB에서 CRUD와 관련한 로직을 할 때마다 모든 메서드 호출에 대해 try~catch가 존재해야 하는 문제점이 발생했다.
+// 부모에서 전체적으로 try~catch로 잡아버려서 단순히 에러로 죽는 것을 방지해도 상관없지만, 이렇게 되면 catch 구분에 모든 처리 로직들이 누적되어 복잡도가 올라가는 문제가 발생했다.
+// 따라서, 특정할 수 있는 에러가 존재한다면 커스텀하여 관리할 수 있도록 수정하였다.
 
 export class CustomError extends Error {
   constructor(readonly message: string, public name: string) {
@@ -11,37 +11,25 @@ export class CustomError extends Error {
   }
 }
 
-export type BaseErrorCase<T> = (err: Error & { name: T }) => Error; // 호출당시가 아닌, 할당 내용에 타입정의이므로 할당하는 장소에서 타입 정의해야 함.
-
-export const customErrorRange = (errGenerator: () => Error, errorCase: (err: Error) => void) => {
-  try {
-    throw errGenerator();
-  } catch (err) {
-    errorCase(err);
-  }
-};
-export const customErrWrapperGenerator =
-  (
-    targetErrName: string,
-    errorNameEnum: { [key: string]: string },
-    errorCase: (err: Error) => void,
-    message: string = '',
-  ) =>
-  <T extends (...args: any) => any>(target: T): ReturnType<T> => {
-    // 호출 당시 타입이 인자에 의해 정해지므로, T를 extends할 때 일반화 타입으로 확장함.
-    // customErrHandler의 내곽은 CustomError을 내보내는 관심사를 담당한다.
-    // customErrRange는 customError의 분기를 처리하는 관심사를 담당한다.
+export type BaseErrorCase<T> = (err: Error & { name: T }) => Error; // 호출당시가 아닌, 할당 내용에 타입정의이므로 할당하는 장소에서 타입 정의해야 함 (generic T 위치가 좌측). 공적사용을 위해 index.ts에서 export함
+export type Closure = <T extends (...args: any) => any>(targetFunc: T) => ReturnType<T>; // 호출 당시 타입이 인자에 의해 정해지므로, T를 extends할 때 일반화 타입으로 확장함. (generic T 위치가 우측)
+export const customErrHandlerGenerator = (targetErrName: string, message: string = '') =>
+  ((targetFunc) => {
+    // customErrWrapperGenerator은 CustomError을 생성해 내보내는 관심사를 담당한다.
     try {
-      return target();
+      return targetFunc();
     } catch (err) {
-      const errorGenerator = (): Error => {
-        if (errorNameEnum[targetErrName]) {
-          return new CustomError(message, targetErrName);
-        }
-
-        return err;
-      };
-
-      customErrorRange(errorGenerator, errorCase);
+      throw new CustomError(message, targetErrName); // 받아오는 에러객체가 아닌, 커스텀 에러객체를 throw
     }
-  };
+  }) as Closure;
+
+export const customErrorBoundaryGenerator =
+  (errorCase: (err: Error) => void) => (customErrHandler: ReturnType<typeof customErrHandlerGenerator>) =>
+    ((targetFunc) => {
+      // customErrRange는 customError의 분기를 처리하는 관심사를 담당한다.
+      try {
+        return customErrHandler(targetFunc);
+      } catch (err) {
+        errorCase(err);
+      }
+    }) as Closure;
