@@ -1,3 +1,4 @@
+import useRecoilImmerState from 'hooks/useImmerState';
 import { atom } from 'recoil';
 
 export interface MemoCanvasConfig {
@@ -21,3 +22,11 @@ export const displayCanvasConfig = atom<DisplayCanvasConfig>({
     isDisplay: false,
   },
 });
+
+export const useSetMemoImpossible = () => {
+  const [_, setCanSaveMemo] = useRecoilImmerState(memoCanvasConfig);
+  setCanSaveMemo((draft) => {
+    draft.canSaveMemo = false;
+    return draft;
+  });
+};

@@ -4,7 +4,7 @@ import { debounce } from 'helper/debounce';
 import { checkMobile } from 'helper/checkMobile';
 import React, { useEffect, useRef, useState } from 'react';
 import { useRecoilValue } from 'recoil';
-import { memoCanvasConfig } from 'recoil/memo';
+import { memoCanvasConfig, useSetMemoImpossible } from 'recoil/memo';
 import { colors } from 'styles/theme';
 import { integerDiff } from 'helper/checkDiff';
 import { converURLToImageData } from 'helper/converURLToImageData';
@@ -104,10 +104,10 @@ function MemoCanvas() {
     // const canvasDataUrl = canvas.toDataURL();
     // drawDataUrlPath.current.push(canvasDataUrl);
     const saveData = {
-      id: drawPath.current.length,
-      dataURL: imageData,
+      snapshot: 'recent saved image',
+      imageData,
     };
-    saveTransaction(tableEnum.memo, saveData, 'put');
+    saveTransaction(tableEnum.memo, saveData, 'put', useSetMemoImpossible);
   };
 
   const stopDrawing = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {

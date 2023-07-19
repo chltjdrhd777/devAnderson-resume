@@ -1,12 +1,10 @@
 import { Dispatch, SetStateAction, useEffect } from 'react';
-import { DraftFunction } from './useImmerState';
-import { MemoCanvasConfig } from 'recoil/memo';
 import { VersionManager } from 'indexedDB/versionManager';
+import { useSetMemoImpossible } from 'recoil/memo';
 
 function useCheckIndexedDB(
   dbName: string,
   setDatabase: Dispatch<SetStateAction<IDBDatabase>>,
-  setMemoImpossible: () => void,
   createTable: (tableName: string, db: IDBDatabase | null) => IDBObjectStore,
 ) {
   useEffect(() => {
@@ -18,7 +16,7 @@ function useCheckIndexedDB(
 
     if (!indexedDB) {
       console.error(`There is no IndexedDB`);
-      setMemoImpossible();
+      useSetMemoImpossible();
       return;
     }
 
@@ -37,7 +35,7 @@ function useCheckIndexedDB(
       request.onerror = (e) => {
         console.error(`IndexedDB open error`);
         console.log(e);
-        setMemoImpossible();
+        useSetMemoImpossible();
       };
       request.onupgradeneeded = (e) => {
         // database merger (indexedDB 오픈하여 인스턴스 만든 후, 현 로컬의 indexedDB 확인시 DB가 없거나 버전이 낮으면 호출됨)

@@ -3,7 +3,9 @@ import { BaseErrorCase, customErrHandlerGenerator, customErrorBoundaryGenerator 
 const errorNameEnum = {
   transactionError: 'transactionError',
   objectStoreError: 'objectStoreError',
+  createError: 'createError',
 } as const;
+Object.freeze(errorNameEnum);
 
 type ErrorName = (typeof errorNameEnum)[keyof typeof errorNameEnum];
 type ErrorCase = BaseErrorCase<ErrorName>;
@@ -16,6 +18,10 @@ const errorCase: ErrorCase = (err) => {
     console.error(`${err.name} 이 발생했습니다`, err);
   }
 
+  if (err.name === 'createError') {
+    console.error(`${err.name} 이 발생했습니다`, err);
+  }
+
   throw err; //무조건 err를 다시 던지게 하여, 부모 로직에서 이 함수 호출 이후의 로직을 하지 않도록 block한다.
 };
 
@@ -23,3 +29,4 @@ const customErrorBoundary = customErrorBoundaryGenerator(errorCase); // errorCas
 
 export const handleTransactionErr = customErrorBoundary(customErrHandlerGenerator(errorNameEnum.transactionError));
 export const handleObjectStoreErr = customErrorBoundary(customErrHandlerGenerator(errorNameEnum.objectStoreError));
+export const handleCreateErr = customErrorBoundary(customErrHandlerGenerator(errorNameEnum.createError));

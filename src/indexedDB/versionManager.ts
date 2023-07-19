@@ -17,6 +17,7 @@ export class VersionManager {
   ) {}
 
   update() {
+    // break가 없는 이유는, 해당 old버전 전까지 업데이트를 끌어올려야 하기 때문임.(전부 처리되어야 함)
     switch (this.oldVersion) {
       case 0:
         this.setDatabase(this.db);
