@@ -1,6 +1,6 @@
 export function converURLToImageData(url: string) {
-  return new Promise<ImageData>((resolve, reject) => {
-    if (!url) return reject();
+  return new Promise<ImageData | null>((resolve, reject) => {
+    if (!url) return resolve(null);
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     const image = new Image();
@@ -8,7 +8,6 @@ export function converURLToImageData(url: string) {
     image.addEventListener(
       'load',
       () => {
-        console.log('이미지 로드 완료', image);
         canvas.width = image.width;
         canvas.height = image.height;
         context.drawImage(image, 0, 0, canvas.width, canvas.height);
@@ -16,5 +15,6 @@ export function converURLToImageData(url: string) {
       },
       false,
     );
+    image.addEventListener('error', () => resolve(null));
   });
 }

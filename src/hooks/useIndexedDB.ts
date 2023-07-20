@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import useCheckIndexedDB from './useCheckIndexedDB';
-import { handleCreateErr, handleObjectStoreErr, handleTransactionErr } from 'Error/indexedDB';
+import {
+  handleCreateErr,
+  handleIndexErr,
+  handleObjectStoreErr,
+  handleOpenCursorErr,
+  handleTransactionErr,
+} from 'Error/indexedDB';
 
 //해당 로직은 memoCanvas에서만 사용될 것이므로, database instance가 유지될 필요가 없음.
 //만약 이 훅이 여러 컴포넌트에 쓰인다면, 매번 호출 때마다 database를 초기화 할 것이므로 비효율적
@@ -21,6 +27,10 @@ export const tableEnum = {
   memo: 'memo',
 } as const;
 Object.freeze(tableEnum);
+
+export const indexing = {
+  memo: 'snapshot',
+};
 
 function useIndexedDB({ dbName }: Params) {
   const [database, setDatabase] = useState<IDBDatabase | null>(null);
@@ -45,8 +55,8 @@ function useIndexedDB({ dbName }: Params) {
 
     // store = DB에서 테이블 혹은 컬렉션과 비슷한 개념. 데이터들이 모아지는 장소
     if (!db.objectStoreNames.contains(tableName)) {
-      const store = db.createObjectStore(tableName, { keyPath: 'snapshot' });
-      store.createIndex('indexing based on snapshot', 'snapshot', { unique: true });
+      const store = db.createObjectStore(tableName, { keyPath: indexing.memo });
+      store.createIndex(indexing.memo, indexing.memo, { unique: true }); // (인덱스 접근자, 객체 키패스, 옵션)
 
       return store;
     }
@@ -61,35 +71,29 @@ function useIndexedDB({ dbName }: Params) {
     database.deleteObjectStore(tableName);
   };
 
-  const getLastValueFromTable = (tableName: string, indexing: string = 'id') => {
-    return new Promise<string | undefined>((resolve, reject) => {
+  const getLastValueFromTable = <T>(tableName: string, indexing: string) => {
+    return new Promise<T>((resolve, reject) => {
       try {
-        const getDataByDescend = database
-          ?.transaction(tableName, 'readonly') // 트랜젝션 객체 초기화 (그룹 작업 관련 인스턴스)
-          ?.objectStore(tableName) // get table
-          ?.index(indexing)
-          ?.openCursor(null, 'prev');
-        // const objectStore = transaction.objectStore(tableName);
-        // const index = objectStore.index('id');
-        // const request = index.openCursor(null, 'prev'); // 인덱스를 내림차순으로
+        if (!database) {
+          return resolve(undefined);
+        }
 
-        if (getDataByDescend) {
-          getDataByDescend.onsuccess = (event) => {
-            const cursor = getDataByDescend.result;
-            if (cursor) {
-              const lastValue = cursor.value;
-              resolve(lastValue);
-            } else {
-              resolve(undefined);
-            }
+        const transaction = handleTransactionErr(() => database?.transaction(tableName, 'readonly'));
+        const table = handleObjectStoreErr(() => transaction?.objectStore(tableName));
+        const index = handleIndexErr(() => table?.index(indexing));
+        const openCursor = handleOpenCursorErr(() => index?.openCursor(null, 'prev'));
+
+        if (openCursor) {
+          openCursor.onsuccess = (e) => {
+            const value = openCursor.result?.value;
+            resolve(value);
           };
-
-          getDataByDescend.onerror = () => {
-            reject(new Error('Failed to retrieve last value from object store.'));
+          openCursor.onerror = (e) => {
+            reject(new Error('Failed to retrieve last value from object store'));
           };
         }
       } catch (err) {
-        reject('error 핸들링 내용 수정해야한다.');
+        reject({ reason: 'uncaught error', err });
       }
     });
   };
@@ -101,23 +105,23 @@ function useIndexedDB({ dbName }: Params) {
     }
 
     try {
-      const transaction = handleTransactionErr(() => database.transaction(tableName, 'readwrite'));
-      const table = handleObjectStoreErr(() => transaction.objectStore(tableName));
-      const request = handleCreateErr(() => (type === 'add' ? table.add(data) : table.put(data)));
+      const transaction = handleTransactionErr(() => database?.transaction(tableName, 'readwrite'));
+      const table = handleObjectStoreErr(() => transaction?.objectStore(tableName));
+      const request = handleCreateErr(() => (type === 'add' ? table?.add(data) : table?.put(data)));
       request.onsuccess = () => console.log('save success');
       request.onerror = (e) => {
         console.error('no suffient space to save data');
         callback && callback();
       };
     } catch (err) {
-      console.log('부모에서 에러처리', err);
+      console.log('uncaught error', err);
     }
   };
 
   // indexedDB 조회 후 database 초기화.
   useCheckIndexedDB(dbName, setDatabase, createTable);
 
-  return { getDatabase, destroyDatabase, createTable, deleteTable, getLastValueFromTable, saveTransaction };
+  return { database, getDatabase, destroyDatabase, createTable, deleteTable, getLastValueFromTable, saveTransaction };
 }
 
 export default useIndexedDB;
