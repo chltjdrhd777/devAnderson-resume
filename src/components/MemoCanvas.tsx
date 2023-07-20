@@ -10,6 +10,11 @@ import { integerDiff } from 'helper/checkDiff';
 import { converURLToImageData } from 'helper/converURLToImageData';
 import useIndexedDB, { indexing, tableEnum } from 'hooks/useIndexedDB';
 
+interface Memo {
+  snapshot: string;
+  dataUrl: string;
+}
+
 function MemoCanvas() {
   //bugfix
   // 2. 현재 drawing을 하고 안하고 기준으로 메모가 보이는데, 메모 보는 옵션에 따라 보이고 안보이고로 수정해야 함.
@@ -27,15 +32,23 @@ function MemoCanvas() {
   const canvasCtx = useRef<CanvasRenderingContext2D | null>(null);
   const [contextConfig, setContextConfig] = useState<Partial<CanvasRenderingContext2D>>({
     strokeStyle: colors.black,
-    lineWidth: 1.3,
-    lineCap: 'butt',
+    lineWidth: 2,
+    lineCap: 'round',
+    lineJoin: 'round',
   });
 
   const drawPath = useRef<ImageData[]>([]);
-  const drawDataUrlPath = useRef<string[]>([]);
   const drawStartCoord = useRef<{ x: number | null; y: number | null }>({ x: null, y: null });
   const [isDrawing, setIsDrawing] = useState(false);
   const { database, saveTransaction, getLastValueFromTable } = useIndexedDB({ dbName: 'resume-indexedDB' });
+
+  const applyContextConfig = () => {
+    const context = canvasCtx.current ?? {};
+
+    Object.entries(contextConfig).forEach(([key, value]) => {
+      context[key] = value;
+    });
+  };
 
   const resetDrawingData = () => {
     setIsDrawing(false);
@@ -72,6 +85,7 @@ function MemoCanvas() {
       context?.moveTo(x, y);
     } else {
       // 그릴 때, 해당 좌표까지 픽셀경로를 만들고(lineTo) 그 픽셀을 채워넣어서 라인을 만든다(stroke).
+      applyContextConfig();
       context?.lineTo(x, y);
       context?.stroke();
     }
@@ -82,6 +96,8 @@ function MemoCanvas() {
       const context = canvasCtx.current;
       const x = e.touches[0].pageX;
       const y = e.touches[0].pageY;
+      applyContextConfig();
+
       context?.lineTo(x, y);
       context?.stroke();
     }
@@ -89,26 +105,6 @@ function MemoCanvas() {
   // 모바일은 터치드래그 막아야하므로 "e.preventDefault() 해주기 위하여 passive를 false로 둔다."
   // passive[default : true] = 모바일 환경에서 부드러운 스크롤 위해 스크롤 처리 미리하도록 함. 이게 true일 경우, preventDefault 사용 불가.
   canvasRef.current?.addEventListener('touchmove', onDrawingForMobile, { passive: false });
-
-  const saveDrawing = () => {
-    // resize를 하면 canvas의 크기가 바껴 imageData가 사라지기에, 해당 Data를 ref에 기록해둔다.
-    const canvas = canvasRef.current;
-    const context = canvasCtx.current;
-    const imageData = context?.getImageData(0, 0, canvas.width, canvas.height);
-    drawPath.current.push(imageData);
-
-    // indexedDB
-    // 저장 당시에는, 모든 이미지가 저장될 이유가 없음
-    // 항상 지금 오는 내용으로 저장하게만 만들면 된다
-    // 보기 버튼이 활성화되어있고, 캔버스 오픈 상태가 아닐때만 readOnly 컴포넌트가 떠있게 한다
-    // const canvasDataUrl = canvas.toDataURL();
-    // drawDataUrlPath.current.push(canvasDataUrl);
-    const saveData = {
-      snapshot: 'recent saved image',
-      imageData,
-    };
-    saveTransaction(tableEnum.memo, saveData, 'put', useSetMemoImpossible);
-  };
 
   const stopDrawing = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
     if (isMobile) {
@@ -143,6 +139,23 @@ function MemoCanvas() {
     resetDrawingData();
   };
 
+  const saveDrawing = () => {
+    // resize를 하면 canvas의 크기가 바껴 imageData가 사라지기에, 해당 Data를 ref에 기록해둔다.
+    const canvas = canvasRef.current;
+    const context = canvasCtx.current;
+    const imageData = context?.getImageData(0, 0, canvas.width, canvas.height);
+    drawPath.current.push(imageData);
+
+    // indexedDB
+    const dataUrl = canvas.toDataURL();
+
+    const saveData = {
+      snapshot: 'recently saved image dataUrl',
+      dataUrl,
+    };
+    saveTransaction(tableEnum.memo, saveData, 'put', useSetMemoImpossible);
+  };
+
   const onMouseLeave = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
     const { x, y } = drawStartCoord.current;
     if (x !== null && y !== null) {
@@ -155,38 +168,28 @@ function MemoCanvas() {
     const context = canvasCtx.current;
     context?.clearRect(0, 0, canvas.width, canvas.height);
 
-    // drawPath.current?.forEach((imageData) => {
-    //   context?.putImageData(imageData, 0, 0);
-    // });
-    const lastDrawing = drawPath.current[drawPath.current.length - 1];
-    if (lastDrawing) {
-      context?.putImageData(lastDrawing, 0, 0);
-    }
+    drawPath.current?.forEach((imageData) => {
+      context?.putImageData(imageData, 0, 0);
+    });
   };
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const parentElement = canvas.parentElement;
-
     const context = canvas.getContext('2d', { willReadFrequently: true });
-    context.imageSmoothingEnabled = true;
-    context.strokeStyle = contextConfig.strokeStyle;
-    context.lineWidth = contextConfig.lineWidth;
-    context.lineCap = contextConfig.lineCap;
     canvasCtx.current = context;
 
     const updateCanvasSize = () => {
-      canvas.width = parentElement.clientWidth;
-      canvas.height = parentElement.clientHeight;
+      const previousSize = { width: canvas.width, height: canvas.height };
+
+      canvas.width = Math.max(parentElement.clientWidth, previousSize.width);
+      canvas.height = Math.max(parentElement.clientHeight, previousSize.height);
 
       debounce(redraw, 500)();
     };
     updateCanvasSize();
 
-    //resize하면 그림그리는 포인트도 이상하고, 불러들어와서 반영되야하는 이미지의 위치도 이상해짐
-    //둘 다 영향받는다는 것은 뭔가 초기점 설정할 때 문제가 있다는 뜻이고
-    // 현재 초기점 설정을 그냥 pageX랑 pageY로 하고있는데 그게 문제일거임.
-    // 추가적으로 캔버스 떠있으면 아래에 이상한 여백 생기는 문제 해결해야 함.
+    // 캔버스 떠있으면 아래에 이상한 여백 생기는 문제 해결해야 함.
     window.addEventListener('resize', updateCanvasSize);
     return () => {
       window.removeEventListener('resize', updateCanvasSize);
@@ -195,9 +198,16 @@ function MemoCanvas() {
 
   useEffect(() => {
     (() =>
-      getLastValueFromTable(tableEnum.memo, indexing.memo).then(
-        (imageData) => imageData && drawPath.current.push(imageData),
-      ))();
+      getLastValueFromTable<Memo>(tableEnum.memo, indexing.memo).then(async (value) => {
+        if (value && value.dataUrl) {
+          const { dataUrl } = value;
+
+          const convertedDataUrl = await converURLToImageData(dataUrl);
+          if (convertedDataUrl instanceof ImageData) {
+            drawPath.current.push(convertedDataUrl);
+          }
+        }
+      }))();
   }, [database]);
 
   return (
@@ -208,7 +218,6 @@ function MemoCanvas() {
         onMouseDown={startDrawing}
         onMouseUp={stopDrawing}
         onMouseLeave={onMouseLeave}
-        // onTouchMove={onDrawingForMobile}
         onTouchStart={startDrawingForMobile}
         onTouchEnd={stopDrawingForMobile}
         onTouchCancel={stopDrawingForMobile}
@@ -238,8 +247,6 @@ const CanvasFrame = styled.div<{ isCanvasOpen: boolean }>`
 `;
 
 const Canvas = styled.canvas`
-  width: 100%;
-  height: 100%;
   image-rendering: crisp-edges;
 `;
 

@@ -71,8 +71,8 @@ function useIndexedDB({ dbName }: Params) {
     database.deleteObjectStore(tableName);
   };
 
-  const getLastValueFromTable = (tableName: string, indexing: string = 'id') => {
-    return new Promise<ImageData | undefined>((resolve, reject) => {
+  const getLastValueFromTable = <T>(tableName: string, indexing: string) => {
+    return new Promise<T>((resolve, reject) => {
       try {
         if (!database) {
           return resolve(undefined);
@@ -85,7 +85,7 @@ function useIndexedDB({ dbName }: Params) {
 
         if (openCursor) {
           openCursor.onsuccess = (e) => {
-            const value = openCursor.result?.value?.imageData;
+            const value = openCursor.result?.value;
             resolve(value);
           };
           openCursor.onerror = (e) => {
