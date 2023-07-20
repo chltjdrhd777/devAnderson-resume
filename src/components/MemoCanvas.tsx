@@ -8,7 +8,7 @@ import { memoCanvasConfig, useSetMemoImpossible } from 'recoil/memo';
 import { colors } from 'styles/theme';
 import { integerDiff } from 'helper/checkDiff';
 import { converURLToImageData } from 'helper/converURLToImageData';
-import useIndexedDB, { tableEnum } from 'hooks/useIndexedDB';
+import useIndexedDB, { indexing, tableEnum } from 'hooks/useIndexedDB';
 
 function MemoCanvas() {
   //bugfix
@@ -35,7 +35,7 @@ function MemoCanvas() {
   const drawDataUrlPath = useRef<string[]>([]);
   const drawStartCoord = useRef<{ x: number | null; y: number | null }>({ x: null, y: null });
   const [isDrawing, setIsDrawing] = useState(false);
-  const { saveTransaction, getLastValueFromTable } = useIndexedDB({ dbName: 'resume-indexedDB' });
+  const { database, saveTransaction, getLastValueFromTable } = useIndexedDB({ dbName: 'resume-indexedDB' });
 
   const resetDrawingData = () => {
     setIsDrawing(false);
@@ -154,6 +154,7 @@ function MemoCanvas() {
     const canvas = canvasRef.current;
     const context = canvasCtx.current;
     context?.clearRect(0, 0, canvas.width, canvas.height);
+
     // drawPath.current?.forEach((imageData) => {
     //   context?.putImageData(imageData, 0, 0);
     // });
@@ -182,22 +183,22 @@ function MemoCanvas() {
     };
     updateCanvasSize();
 
-    // const memoData = localStorage.getItem('memoData');
-
-    // if (memoData) {
-    //   const uriList: string[] = JSON.parse(memoData);
-
-    //   converURIToImageData(uriList[uriList.length - 1]).then((data) => {
-    //     console.log('imageData', data);
-    //     drawPath.current.push(data);
-    //   });
-    // }
-
+    //resize하면 그림그리는 포인트도 이상하고, 불러들어와서 반영되야하는 이미지의 위치도 이상해짐
+    //둘 다 영향받는다는 것은 뭔가 초기점 설정할 때 문제가 있다는 뜻이고
+    // 현재 초기점 설정을 그냥 pageX랑 pageY로 하고있는데 그게 문제일거임.
+    // 추가적으로 캔버스 떠있으면 아래에 이상한 여백 생기는 문제 해결해야 함.
     window.addEventListener('resize', updateCanvasSize);
     return () => {
       window.removeEventListener('resize', updateCanvasSize);
     };
   }, []);
+
+  useEffect(() => {
+    (() =>
+      getLastValueFromTable(tableEnum.memo, indexing.memo).then(
+        (imageData) => imageData && drawPath.current.push(imageData),
+      ))();
+  }, [database]);
 
   return (
     <CanvasFrame isCanvasOpen={isCanvasOpen}>
