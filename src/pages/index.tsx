@@ -62,7 +62,7 @@ const Options = styled.div`
   position: fixed;
   bottom: 1rem;
   right: 1rem;
-  z-index: 10000;
+  z-index: var(--zIndex-1st);
 
   ${genMedia(
     'web(1024px)',
