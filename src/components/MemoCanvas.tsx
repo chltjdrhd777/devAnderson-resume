@@ -57,20 +57,23 @@ const CanvasFrame = styled.div<{ isCanvasOpen: boolean }>`
   top: 0;
   left: 0;
 
-  z-index: -9000;
+  z-index: calc(var(--zIndex-2st) * -1);
   opacity: 0;
   transition: opacity 0.1s ease-in;
 
   ${({ isCanvasOpen }) =>
     isCanvasOpen &&
     css`
-      z-index: 9000;
+      z-index: var(--zIndex-2st);
       opacity: 1;
     `}
 `;
 
 const Canvas = styled.canvas`
-  image-rendering: crisp-edges;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: var(--zIndex-2st);
 `;
 
 export default MemoCanvas;

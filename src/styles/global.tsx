@@ -1,6 +1,12 @@
 import { Global, css } from '@emotion/react';
 
 const globalCSS = css`
+  :root {
+    --zIndex-1st: 10000;
+    --zIndex-2st: 9000;
+    --zIndex-3st: 8000;
+  }
+
   @font-face {
     font-family: 'NotoSansKR';
     src: url('/fonts/NotoSans-Regular.woff') format('woff');

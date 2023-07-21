@@ -31,7 +31,7 @@ const Gradient = styled.div`
   height: var(--header-height);
 
   position: fixed;
-  z-index: 10000;
+  z-index: var(--zIndex-1st);
 
   color: ${colors.starColor};
   ${gradients.pointGraidentBlue};
