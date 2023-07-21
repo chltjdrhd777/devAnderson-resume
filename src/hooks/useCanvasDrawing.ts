@@ -45,9 +45,13 @@ function useCanvasDrawing() {
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
     setIsDrawing(true);
+    const context = canvasCtx.current;
     const x = e.nativeEvent.pageX;
     const y = e.nativeEvent.pageY;
     drawStartCoord.current = { x, y };
+
+    context?.beginPath();
+    context?.moveTo(x, y);
   };
   const startDrawingForMobile = (e: React.TouchEvent<HTMLCanvasElement>) => {
     setIsDrawing(true);
@@ -56,8 +60,6 @@ function useCanvasDrawing() {
     const y = e.touches[0].pageY;
     drawStartCoord.current = { x, y };
 
-    // 움직일때마다 x,y가 결정되는 마우스 이벤트와 다르게, 모바일은 터치하는 순간 x,y가 결정되니까
-    // 그 x,y를 터치 순간에 업데이트 시켜서 초기점으로 설정하는 로직이 필요하다.
     context?.beginPath();
     context?.moveTo(x, y);
   };
@@ -67,15 +69,18 @@ function useCanvasDrawing() {
     const x = e.nativeEvent.pageX;
     const y = e.nativeEvent.pageY;
 
-    if (!isDrawing || !isCanvasOpen) {
+    if (isCanvasOpen) {
       // 그리지 않을 때, 마우스가 움직이면 canvas의 시작점을 reset하고(beginPath) 재설정(moveTo).
-      context?.beginPath();
-      context?.moveTo(x, y);
-    } else {
-      // 그릴 때, 해당 좌표까지 픽셀경로를 만들고(lineTo) 그 픽셀을 채워넣어서 라인을 만든다(stroke).
-      applyContextConfig();
-      context?.lineTo(x, y);
-      context?.stroke();
+
+      if (!isDrawing) {
+        context?.beginPath();
+        context?.moveTo(x, y);
+      } else {
+        // 그릴 때, 해당 좌표까지 픽셀경로를 만들고(lineTo) 그 픽셀을 채워넣어서 라인을 만든다(stroke).
+        applyContextConfig();
+        context?.lineTo(x, y);
+        context?.stroke();
+      }
     }
   };
   const onDrawingForMobile = (e: TouchEvent) => {
@@ -177,7 +182,6 @@ function useCanvasDrawing() {
     };
     updateCanvasSize();
 
-    // 캔버스 떠있으면 아래에 이상한 여백 생기는 문제 해결해야 함.
     window.addEventListener('resize', updateCanvasSize);
     return () => {
       window.removeEventListener('resize', updateCanvasSize);
