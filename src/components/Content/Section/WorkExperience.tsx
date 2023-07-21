@@ -186,12 +186,14 @@ const WorkExperienceSection = styled.section`
           & h5 {
             visibility: hidden;
             position: absolute;
+            padding-bottom: 0.7rem;
+            left: -1.5rem;
 
             ${genMedia(
               'web(1024px)',
               css`
                 visibility: visible;
-                position: initial;
+                position: relative;
               `,
             )}
           }

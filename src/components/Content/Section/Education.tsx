@@ -39,7 +39,7 @@ const EducationSection = styled.section`
     ${genMedia(
       'web(1024px)',
       css`
-        font-size: 2.2rem;
+        font-size: 2.5rem !important;
       `,
     )}
   }

@@ -1,14 +1,7 @@
 import { css } from '@emotion/react';
 import styled from '@emotion/styled';
-import { debounce } from 'helper/debounce';
-import { checkMobile } from 'helper/checkMobile';
-import React, { useEffect, useRef, useState } from 'react';
-import { useRecoilValue } from 'recoil';
-import { memoCanvasConfig, useSetMemoImpossible } from 'recoil/memo';
-import { colors } from 'styles/theme';
-import { integerDiff } from 'helper/checkDiff';
-import { converURLToImageData } from 'helper/converURLToImageData';
-import useIndexedDB, { indexing, tableEnum } from 'hooks/useIndexedDB';
+import React from 'react';
+
 import useCanvasDrawing from 'hooks/useCanvasDrawing';
 
 function MemoCanvas() {
@@ -69,11 +62,6 @@ const CanvasFrame = styled.div<{ isCanvasOpen: boolean }>`
     `}
 `;
 
-const Canvas = styled.canvas`
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: var(--zIndex-2st);
-`;
+const Canvas = styled.canvas``;
 
 export default MemoCanvas;

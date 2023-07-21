@@ -84,12 +84,11 @@ const Container = styled.div`
   }
 
   & h5 {
-    font-size: 1.6rem;
-
+    font-size: 1.8rem;
     ${genMedia(
       'web(1024px)',
       css`
-        font-size: 2rem;
+        font-size: 2.2rem;
       `,
     )}
   }
