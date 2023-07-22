@@ -15,25 +15,16 @@ function Content() {
   useFadeInAnimation();
 
   const Devider = <Divider className="devider animate" />;
-  const Sections = [
-    <TitleSection />,
-    <ChannelSection />,
-    <WorkExperienceSection />,
-    <SkillSection />,
-    <EducationSection />,
-  ].reduce((acc, section, idx, Sections) => {
-    // Section들 사이에 Devider를 삽입.
-    acc.push(cloneElement(section, { key: idx }));
-    if (idx !== Sections.length - 1) acc.push(cloneElement(Devider, { key: uuid() }));
-    return acc;
-  }, []);
+  {
+    /* //개인프로젝트 부분 //article 부분 (블로그 강조할 부분 나타내기) */
+  }
 
-  return (
-    <Container>
-      {Sections}
-      //개인프로젝트 부분 //article 부분 (블로그 강조할 부분 나타내기)
-    </Container>
+  const Sections = addDevider(
+    [<TitleSection />, <ChannelSection />, <WorkExperienceSection />, <SkillSection />, <EducationSection />],
+    Devider,
   );
+
+  return <Container>{Sections}</Container>;
 }
 
 const Container = styled.div`
@@ -192,5 +183,13 @@ const Divider = styled.div`
   margin: 3rem 0;
   ${gradients.pointGraidentBlue};
 `;
+
+const addDevider = (Elements: React.JSX.Element[], Devider: React.JSX.Element) =>
+  Elements.reduce((acc, section, idx, Sections) => {
+    // Section들 사이에 Devider를 삽입.
+    acc.push(cloneElement(section, { key: idx }));
+    if (idx !== Sections.length - 1) acc.push(cloneElement(Devider, { key: uuid() }));
+    return acc;
+  }, []);
 
 export default Content;
