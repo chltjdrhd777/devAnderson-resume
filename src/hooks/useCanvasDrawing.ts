@@ -7,8 +7,8 @@ import { useRecoilValue } from 'recoil';
 import { memoCanvasAtom, memoLengthAtom, useSetMemoImpossible } from 'recoil/memo';
 import { colors } from 'styles/theme';
 import useIndexedDB, { tableEnum, indexing } from './useIndexedDB';
-import { actions, useDispatch } from 'redux/store';
 import useRecoilImmerState from './useImmerState';
+import { convertImageDataToURL } from 'helper/convertImageDataToURL';
 
 // Ref로 값을 관리하면
 // <Pros>
@@ -45,7 +45,7 @@ import useRecoilImmerState from './useImmerState';
 
 interface Memo {
   snapshot: string;
-  dataUrl: string;
+  dataUrlList: string[];
 }
 
 function useCanvasDrawing() {
@@ -177,6 +177,8 @@ function useCanvasDrawing() {
     const canvas = canvasRef.current;
     const context = canvasCtxRef.current;
     const imageData = context?.getImageData(0, 0, canvas.width, canvas.height);
+    const lastSavedDataUrl = convertImageDataToURL(drawPathRef.current[drawPathRef.current.length - 1]);
+
     updateDrawPath(imageData);
 
     // indexedDB
@@ -184,7 +186,7 @@ function useCanvasDrawing() {
 
     const saveData = {
       snapshot: 'recently saved image dataUrl',
-      dataUrl,
+      dataUrlList: [dataUrl, lastSavedDataUrl],
     };
     saveTransaction(tableEnum.memo, saveData, 'put', useSetMemoImpossible);
   };
@@ -214,10 +216,13 @@ function useCanvasDrawing() {
     canvasCtxRef.current = context;
 
     const updateCanvasSize = () => {
-      const previousSize = { width: canvas.width, height: canvas.height };
+      // const previousSize = { width: canvas.width, height: canvas.height };
 
-      canvas.width = Math.max(parentElement.clientWidth, previousSize.width);
-      canvas.height = Math.max(parentElement.clientHeight, previousSize.height);
+      // canvas.width = Math.max(parentElement.clientWidth, previousSize.width);
+      // canvas.height = Math.max(parentElement.clientHeight, previousSize.height);
+
+      canvas.width = parentElement.clientWidth;
+      canvas.height = parentElement.clientHeight;
 
       debounce(redraw, 500)();
     };
@@ -233,12 +238,14 @@ function useCanvasDrawing() {
     // 첫 진입시 IndexedDB가 초기화되는 것을 감지하고 그 안에 있는 데이터를 가져오는 로직
     (() =>
       getLastValueFromTable<Memo>(tableEnum.memo, indexing.memo).then(async (value) => {
-        if (value && value.dataUrl) {
-          const { dataUrl } = value;
+        if (value && value.dataUrlList) {
+          const { dataUrlList } = value;
 
-          const convertedDataUrl = await converURLToImageData(dataUrl);
-          if (convertedDataUrl instanceof ImageData) {
-            updateDrawPath(convertedDataUrl);
+          for (let dataUrl of dataUrlList) {
+            const convertedDataUrl = await converURLToImageData(dataUrl);
+            if (convertedDataUrl instanceof ImageData) {
+              updateDrawPath(convertedDataUrl);
+            }
           }
         }
       }))();

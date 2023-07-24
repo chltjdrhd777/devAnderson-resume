@@ -1,4 +1,4 @@
-export function converURLToImageData(url: string) {
+export function converURLToImageData(url: string | null) {
   return new Promise<ImageData | null>((resolve, reject) => {
     if (!url) return resolve(null);
     const canvas = document.createElement('canvas');
