@@ -1,15 +1,6 @@
 import styled from '@emotion/styled';
 import { colors } from 'styles/theme';
 
-export const BaseButton = styled.button`
-  width: 5rem;
-  height: 5rem;
-  border-radius: 100%;
-  border: 1px solid ${colors.grayTwo};
-  overflow: hidden;
-  ${({ theme }) => theme.middle};
-`;
-
 export const BaseButtonIconContainer = styled.div`
   display: inline-block;
   width: 90%;
@@ -21,5 +12,14 @@ export const BaseButtonIconContainer = styled.div`
   color: ${colors.footerColor};
   position: absolute;
 
+  ${({ theme }) => theme.middle};
+`;
+
+export const BaseButton = styled.button`
+  width: 5rem;
+  height: 5rem;
+  border-radius: 100%;
+  border: 1px solid ${colors.grayTwo};
+  overflow: hidden;
   ${({ theme }) => theme.middle};
 `;

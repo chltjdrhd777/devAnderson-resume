@@ -51,10 +51,6 @@ interface Memo {
 function useCanvasDrawing() {
   const isCanvasOpen = useRecoilValue(memoCanvasAtom).isCanvasOpen;
   const isMobile = checkMobile();
-  const refSetter = <T>(ref: React.MutableRefObject<T>, updater: (current: T) => any, callback?: Function) => {
-    updater(ref.current);
-    callback && callback();
-  };
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasCtxRef = useRef<CanvasRenderingContext2D | null>(null);
   const [contextConfig, setContextConfig] = useState<Partial<CanvasRenderingContext2D>>({
@@ -65,16 +61,10 @@ function useCanvasDrawing() {
   });
 
   const drawPathRef = useRef<ImageData[]>([]);
-  // const [drawPathLength, setDrawPathLength] = useState(drawPath.current.length);
   const [drawPathLength, setDrawPathLength] = useRecoilImmerState(memoLengthAtom);
   const updateDrawPath = (imageData: ImageData) => {
-    refSetter(
-      drawPathRef,
-      (current) => current.push(imageData),
-      () => setDrawPathLength(drawPathRef.current.length),
-    );
-    // 외부 접근 가능한 state로 메모 길이를 가지고 있어야, 보기 버튼이 나올지 안나올지 결정가능 (메모 길이가 있어야만, 보기 버튼이 노출)
-    // 보기 버튼의 누르냐 안누르냐는 리덕스 상태(영속성) 을 변경하는 역할.
+    drawPathRef.current.push(imageData);
+    setDrawPathLength(drawPathRef.current.length);
   };
   const drawStartCoordRef = useRef<{ x: number | null; y: number | null }>({ x: null, y: null });
   const [isDrawing, setIsDrawing] = useState(false);
@@ -187,7 +177,6 @@ function useCanvasDrawing() {
     const canvas = canvasRef.current;
     const context = canvasCtxRef.current;
     const imageData = context?.getImageData(0, 0, canvas.width, canvas.height);
-    // drawPath.current.push(imageData);
     updateDrawPath(imageData);
 
     // indexedDB
@@ -249,7 +238,6 @@ function useCanvasDrawing() {
 
           const convertedDataUrl = await converURLToImageData(dataUrl);
           if (convertedDataUrl instanceof ImageData) {
-            // drawPath.current.push(convertedDataUrl);
             updateDrawPath(convertedDataUrl);
           }
         }

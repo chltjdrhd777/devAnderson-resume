@@ -6,9 +6,6 @@ import useCanvasDrawing from 'hooks/useCanvasDrawing';
 import { useSelector } from 'redux/store';
 
 function MemoCanvas() {
-  //bugfix
-  // 2. 현재 drawing을 하고 안하고 기준으로 메모가 보이는데, 메모 보는 옵션에 따라 보이고 안보이고로 수정해야 함.
-
   // todo 텍스트 넣기 기능 추가
   // 선 굵기 바꾸기
   // 선 색 바꾸기
@@ -16,7 +13,7 @@ function MemoCanvas() {
   // ctrl + Z (진짜 ctrl+z도 되고, 버튼으로도 되고)
   // 전부 지우기
 
-  const memo = useSelector((state) => state.user.memo);
+  const memo = useSelector((state) => state.user.memo); //사용자별 영속성이어야 하기에 Redux-persist로 로컬관리
 
   const {
     isCanvasOpen,
@@ -33,19 +30,25 @@ function MemoCanvas() {
   //보기 모드일 때
   // 1. 메서드들을 조건부로 할당하도록 설정하여 보기 모드가 true이면, 핸들러 없도록 함
   // 2. 캔버스 아래에 있는 존재들 클릭 가능하도록 z-index레벨조정해야 함.
+
+  const isMemoShown = (memo.isMemoShown && drawPathLength !== 0) || isCanvasOpen;
   return (
-    <CanvasFrame isMemoShown={(memo.isMemoShown && drawPathLength !== 0) || isCanvasOpen}>
-      <Canvas
-        ref={canvasRef}
-        onMouseMove={onDrawing}
-        onMouseDown={startDrawing}
-        onMouseUp={stopDrawing}
-        onMouseLeave={onMouseLeave}
-        onTouchStart={startDrawingForMobile}
-        onTouchEnd={stopDrawingForMobile}
-        onTouchCancel={stopDrawingForMobile}
-        onContextMenu={(e) => e.preventDefault()}
-      />
+    <CanvasFrame isMemoShown={isMemoShown}>
+      {isMemoShown ? (
+        <Canvas
+          ref={canvasRef}
+          onMouseMove={onDrawing}
+          onMouseDown={startDrawing}
+          onMouseUp={stopDrawing}
+          onMouseLeave={onMouseLeave}
+          onTouchStart={startDrawingForMobile}
+          onTouchEnd={stopDrawingForMobile}
+          onTouchCancel={stopDrawingForMobile}
+          onContextMenu={(e) => e.preventDefault()}
+        />
+      ) : (
+        <Canvas ref={canvasRef} />
+      )}
     </CanvasFrame>
   );
 }
