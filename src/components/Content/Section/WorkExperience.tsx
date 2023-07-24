@@ -175,6 +175,8 @@ const WorkExperienceSection = styled.section`
           margin-top: 0.9rem;
           list-style-type: none;
           transform: translateX(1.5rem);
+          position: relative;
+          z-index: var(--zIndex-3st);
 
           ${genMedia(
             'web(1024px)',
