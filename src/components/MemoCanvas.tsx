@@ -3,6 +3,7 @@ import styled from '@emotion/styled';
 import React from 'react';
 
 import useCanvasDrawing from 'hooks/useCanvasDrawing';
+import { useSelector } from 'redux/store';
 
 function MemoCanvas() {
   //bugfix
@@ -15,9 +16,12 @@ function MemoCanvas() {
   // ctrl + Z (진짜 ctrl+z도 되고, 버튼으로도 되고)
   // 전부 지우기
 
+  const memo = useSelector((state) => state.user.memo);
+
   const {
     isCanvasOpen,
     canvasRef,
+    drawPathLength,
     onDrawing,
     startDrawing,
     stopDrawing,
@@ -26,8 +30,11 @@ function MemoCanvas() {
     stopDrawingForMobile,
   } = useCanvasDrawing();
 
+  //보기 모드일 때
+  // 1. 메서드들을 조건부로 할당하도록 설정하여 보기 모드가 true이면, 핸들러 없도록 함
+  // 2. 캔버스 아래에 있는 존재들 클릭 가능하도록 z-index레벨조정해야 함.
   return (
-    <CanvasFrame isCanvasOpen={isCanvasOpen}>
+    <CanvasFrame isMemoShown={(memo.isMemoShown && drawPathLength !== 0) || isCanvasOpen}>
       <Canvas
         ref={canvasRef}
         onMouseMove={onDrawing}
@@ -43,7 +50,7 @@ function MemoCanvas() {
   );
 }
 
-const CanvasFrame = styled.div<{ isCanvasOpen: boolean }>`
+const CanvasFrame = styled.div<{ isMemoShown: boolean }>`
   width: 100%;
   height: 100%;
   position: absolute;
@@ -54,10 +61,10 @@ const CanvasFrame = styled.div<{ isCanvasOpen: boolean }>`
   opacity: 0;
   transition: opacity 0.1s ease-in;
 
-  ${({ isCanvasOpen }) =>
-    isCanvasOpen &&
+  ${({ isMemoShown }) =>
+    isMemoShown &&
     css`
-      z-index: var(--zIndex-2st);
+      z-index: calc(var(--zIndex-2st));
       opacity: 1;
     `}
 `;

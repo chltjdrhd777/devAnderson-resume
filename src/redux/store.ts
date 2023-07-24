@@ -2,7 +2,7 @@ import { TypedUseSelectorHook, useDispatch as dispatch, useSelector as selector 
 
 import { configureStore } from '@reduxjs/toolkit';
 import { combineReducers } from 'redux';
-import userSlice, { UserState } from 'redux/userSlice';
+import userSlice from 'redux/userSlice';
 
 import storage from 'redux-persist/lib/storage';
 import { PersistConfig, persistReducer } from 'redux-persist';
@@ -33,8 +33,3 @@ export const useDispatch = () => dispatch<AppDispatch>();
 export const actions = {
   ...userSlice.actions,
 };
-// export const useDispatcher = (targetAction: keyof typeof actions) => {
-//   const dispatch = useDispatch();
-
-//   return () => dispatch(actions[targetAction]());
-// };

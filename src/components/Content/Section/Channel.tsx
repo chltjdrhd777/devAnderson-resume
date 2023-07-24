@@ -41,13 +41,17 @@ const ChannelSection = styled.section`
       -moz-user-select: text;
       -ms-user-select: text;
       -o-user-select: text;
+      position: relative;
+      z-index: var(--zIndex-3st);
 
       & .icon {
         margin-right: 1rem;
       }
 
-      & a {
-        color: ${({ theme }) => theme.linkColor};
+      & .link {
+        & a {
+          color: ${({ theme }) => theme.linkColor};
+        }
       }
     }
 

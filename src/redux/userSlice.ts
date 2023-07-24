@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { WritableDraft } from 'immer/dist/internal';
 
 export interface UserState {
   config: {
@@ -6,7 +7,6 @@ export interface UserState {
   };
   memo: {
     isMemoShown: boolean;
-    memoData: string[];
   };
 }
 
@@ -15,12 +15,9 @@ const initialState: UserState = {
     mode: 'white',
   },
   memo: {
-    isMemoShown: false,
-    memoData: [],
+    isMemoShown: true,
   },
 };
-export type UserKeys = keyof UserState;
-export type UserValues = UserState[UserKeys];
 
 export const userSlice = createSlice({
   name: 'user',
@@ -29,8 +26,8 @@ export const userSlice = createSlice({
     toggleMode: (state) => {
       state.config.mode = state.config.mode === 'white' ? 'dark' : 'white';
     },
-    // 캔버스 저장하려했더니 localstorage 초과. 방법 찾자
-    // 그 과정 블로깅해야함.
+
+    // Canvas를 redux-persist에 저장 === 로컬스토리지에 저장 => 용량 초과, IndexedDB 도입한다.
   },
 });
 
