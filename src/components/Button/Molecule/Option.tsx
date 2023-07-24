@@ -45,6 +45,7 @@ const Button = styled(BaseButton)<OptionProps>`
   )}
 
   ${({ theme }) => theme.middle};
+  ${({ additialCSS }) => additialCSS};
 `;
 const ButtonIconContainer = styled(BaseButtonIconContainer)`
   display: inline-block;

@@ -1,6 +1,6 @@
 import { css } from '@emotion/react';
 import styled from '@emotion/styled';
-import React from 'react';
+import React, { CanvasHTMLAttributes, useEffect } from 'react';
 
 import useCanvasDrawing from 'hooks/useCanvasDrawing';
 import { useSelector } from 'redux/store';
@@ -32,23 +32,20 @@ function MemoCanvas() {
   // 2. 캔버스 아래에 있는 존재들 클릭 가능하도록 z-index레벨조정해야 함.
 
   const isMemoShown = (memo.isMemoShown && drawPathLength !== 0) || isCanvasOpen;
+  const canvasAttrs = {
+    onMouseMove: onDrawing,
+    onMouseDown: startDrawing,
+    onMouseUp: stopDrawing,
+    onMouseLeave: onMouseLeave,
+    onTouchStart: startDrawingForMobile,
+    onTouchEnd: stopDrawingForMobile,
+    onTouchCancel: stopDrawingForMobile,
+    onContextMenu: (e) => e.preventDefault(),
+  } as CanvasHTMLAttributes<HTMLCanvasElement>;
+
   return (
     <CanvasFrame isMemoShown={isMemoShown}>
-      {isMemoShown ? (
-        <Canvas
-          ref={canvasRef}
-          onMouseMove={onDrawing}
-          onMouseDown={startDrawing}
-          onMouseUp={stopDrawing}
-          onMouseLeave={onMouseLeave}
-          onTouchStart={startDrawingForMobile}
-          onTouchEnd={stopDrawingForMobile}
-          onTouchCancel={stopDrawingForMobile}
-          onContextMenu={(e) => e.preventDefault()}
-        />
-      ) : (
-        <Canvas ref={canvasRef} />
-      )}
+      <Canvas ref={canvasRef} {...(isCanvasOpen && canvasAttrs)} />
     </CanvasFrame>
   );
 }
