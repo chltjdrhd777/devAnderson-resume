@@ -13,6 +13,7 @@ import GradientHeader from 'components/GradientHeader';
 import { css } from '@emotion/react';
 import MemoCanvas from 'components/MemoCanvas';
 import OpenCanvasBtn from 'components/Button/OpenCanvasBtn';
+import MemoShownBtn from 'components/Button/MemoShownBtn';
 
 const IndexPage: NextPage = () => {
   return (
@@ -25,6 +26,7 @@ const IndexPage: NextPage = () => {
 
         <ModalPortal>
           <Options>
+            <MemoShownBtn />
             <OpenCanvasBtn />
             <PdfBtn />
           </Options>
