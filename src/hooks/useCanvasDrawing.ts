@@ -53,23 +53,51 @@ function useCanvasDrawing() {
   const isMobile = checkMobile();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasCtxRef = useRef<CanvasRenderingContext2D | null>(null);
+  const drawStartCoordRef = useRef<{ x: number | null; y: number | null }>({ x: null, y: null });
+  const drawPathRef = useRef<ImageData[]>([]);
+  const memoPrevImageSize = useRef<{ width: number; height: number }>({
+    width: 0,
+    height: 0,
+  });
+  const memorizedImageData = useRef<ImageData[]>([]);
+
+  const [drawPathLength, setDrawPathLength] = useRecoilImmerState(memoLengthAtom);
+  const [isDrawing, setIsDrawing] = useState(false);
   const [contextConfig, setContextConfig] = useState<Partial<CanvasRenderingContext2D>>({
     strokeStyle: colors.black,
     lineWidth: 2,
     lineCap: 'round',
     lineJoin: 'round',
   });
-
-  const drawPathRef = useRef<ImageData[]>([]);
-  const [drawPathLength, setDrawPathLength] = useRecoilImmerState(memoLengthAtom);
-  const updateDrawPath = (imageData: ImageData) => {
-    drawPathRef.current.push(imageData);
-    setDrawPathLength(drawPathRef.current.length);
-  };
-  const drawStartCoordRef = useRef<{ x: number | null; y: number | null }>({ x: null, y: null });
-  const [isDrawing, setIsDrawing] = useState(false);
   const { database, saveTransaction, getLastValueFromTable } = useIndexedDB({ dbName: 'resume-indexedDB' });
 
+  //METHOD
+  const updatememoPrevImageSize = async (imageData: ImageData) => {
+    memoPrevImageSize.current.width = imageData.width;
+    memoPrevImageSize.current.height = imageData.height;
+  };
+
+  const updateMemorizedImageData = async (imageData: ImageData) => {
+    const { width: newImageWidth, height: newIamgeHeight } = imageData;
+    const { width: memorizedPrevWidth, height: memorizedPrevHeight } = memoPrevImageSize.current;
+
+    // 이전까지 그리던 사이즈보다 작은 사이즈에서 그리게 될 경우
+    // drawPathRef에 기록되는 가장 마지막의 기록 = 최대사이즈 스냅샷이므로 이것만 저장하여 최종 저장 데이터 용량 최적화
+    // 해당 최적화가 없을 경우, 모든 그려진 drawPath에 대해서 redraw하게되므로 수정한다.
+    if (newImageWidth < memorizedPrevWidth || newIamgeHeight < memorizedPrevHeight) {
+      const lastDrawPath = drawPathRef.current[drawPathRef.current.length - 1];
+      memorizedImageData.current.push(lastDrawPath);
+    }
+  };
+
+  const updateDrawPathRef = (imageData: ImageData) => {
+    updateMemorizedImageData(imageData)
+      .then(() => updatememoPrevImageSize(imageData))
+      .then(() => {
+        drawPathRef.current.push(imageData);
+        setDrawPathLength(drawPathRef.current.length);
+      }); //실행 순서가 중요하여 async를 이용한 then 체이닝 적용.
+  };
   const applyContextConfig = () => {
     const context = canvasCtxRef.current ?? {};
 
@@ -149,7 +177,7 @@ function useCanvasDrawing() {
     const { x: startX, y: startY } = drawStartCoordRef.current;
 
     if (integerDiff(endX, startX) !== 0 || integerDiff(endY, startY) !== 0) {
-      //만약 그냥 제자리 클릭이 아닐 경우, 드로잉 했던 내용 기록
+      // 제자리 클릭이 아니라면, 드로잉이므로 기록한다.
       saveDrawing();
     }
 
@@ -165,7 +193,7 @@ function useCanvasDrawing() {
       (e.changedTouches !== undefined && e.changedTouches.length !== 0 && integerDiff(endX, startX) !== 0) ||
       integerDiff(endY, startY) !== 0
     ) {
-      //만약 그냥 제자리 클릭이 아닐 경우, 드로잉 했던 내용 기록
+      // 제자리 터치가 아니라면, 드로잉이므로 기록한다.
       saveDrawing();
     }
 
@@ -177,18 +205,27 @@ function useCanvasDrawing() {
     const canvas = canvasRef.current;
     const context = canvasCtxRef.current;
     const imageData = context?.getImageData(0, 0, canvas.width, canvas.height);
-    const lastSavedDataUrl = convertImageDataToURL(drawPathRef.current[drawPathRef.current.length - 1]);
 
-    updateDrawPath(imageData);
+    updateDrawPathRef(imageData);
 
     // indexedDB
-    const dataUrl = canvas.toDataURL();
+    debounce(() => {
+      const dataUrlList = [canvas.toDataURL()];
 
-    const saveData = {
-      snapshot: 'recently saved image dataUrl',
-      dataUrlList: [dataUrl, lastSavedDataUrl],
-    };
-    saveTransaction(tableEnum.memo, saveData, 'put', useSetMemoImpossible);
+      console.log('데이터 저장갯수 몇개니', memorizedImageData.current);
+      // 다 좋은데, canvas를 만들어서 이미지 url로 넣은담에 toURL 하는 과정이 너무 렉이거린다
+      // 그냥 imageData 그 자체로 저장하는 걸 고려해야할지도 모르겠다.
+      for (let imageData of memorizedImageData.current) {
+        const convertedImageData = convertImageDataToURL(imageData);
+        dataUrlList.push(convertedImageData);
+      }
+
+      const saveData = {
+        snapshot: 'recently saved image dataUrl',
+        dataUrlList,
+      };
+      saveTransaction(tableEnum.memo, saveData, 'put', useSetMemoImpossible);
+    }, 500)();
   };
 
   const onMouseLeave = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
@@ -216,11 +253,6 @@ function useCanvasDrawing() {
     canvasCtxRef.current = context;
 
     const updateCanvasSize = () => {
-      // const previousSize = { width: canvas.width, height: canvas.height };
-
-      // canvas.width = Math.max(parentElement.clientWidth, previousSize.width);
-      // canvas.height = Math.max(parentElement.clientHeight, previousSize.height);
-
       canvas.width = parentElement.clientWidth;
       canvas.height = parentElement.clientHeight;
 
@@ -244,7 +276,7 @@ function useCanvasDrawing() {
           for (let dataUrl of dataUrlList) {
             const convertedDataUrl = await converURLToImageData(dataUrl);
             if (convertedDataUrl instanceof ImageData) {
-              updateDrawPath(convertedDataUrl);
+              updateDrawPathRef(convertedDataUrl);
             }
           }
         }
