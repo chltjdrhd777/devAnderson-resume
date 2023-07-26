@@ -9,6 +9,7 @@ import { colors } from 'styles/theme';
 import useIndexedDB, { tableEnum, indexing } from './useIndexedDB';
 import useRecoilImmerState from './useImmerState';
 import { convertImageDataToURL } from 'helper/convertImageDataToURL';
+import useDrawPathRef from './useDrawPathRef';
 
 // Ref로 값을 관리하면
 // <Pros>
@@ -24,7 +25,7 @@ import { convertImageDataToURL } from 'helper/convertImageDataToURL';
 // 이 값은 컴포넌트의 생애주기동안 계속 유지되는 값이지만, 이 current의 할당 결과가 변한다고 리랜더링을 유발하지 않는다.
 // 즉, 리엑트는 해당 호출 결과로 만들어지는 object 주소 자체를 기록하기때문에, 리랜더링을 하더라도 해당 주소의 값을 계속 이용하고 변경이 없다고 판단한다.
 // 따라서, useRef의 값이 변화되는 것으로 인해 리랜더링 시 영향을 주게 되는 상황은 아래와 같다
-// a. useRef로 인해서가 아닌, 리랜더링 조건(props 변경, 내부 상태 변경, 부모 리랜더링 등) 이 발생했을 때에는 useRef에 값이 변경된 것이 반영될 수 있다.
+// a. useRef로 인해서가 아닌, 리랜더링 조건(props 변경, 내부 상태 변경, 부모 리랜더링 등) 이 발생했을 때에는 useRef에 값이 변경된 것이 반영될 수 있다. (즉, useEffect에서 변경한 ref값이 변경되고 상태변경 등에 의해 리랜더링이 되었을 때, 해당 값을 useEffect없이 곧바로 사용 가능함. useState였으면 훅 디펜던시로 해당 값 변경 확인해야 함.)
 // b. useRef에 기록되는 값이 HttpElement와 같은 값이고 이 값의 attribute가 변경되면 리랜더링을 유발시킬 수 있다.
 
 // ref의 값 자체는 애초에 고정되게 바라보고 있는 mutable object의 참조값이기 때문에 변경이 리랜더링을 발생시키지 않으나,
@@ -54,7 +55,8 @@ function useCanvasDrawing() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasCtxRef = useRef<CanvasRenderingContext2D | null>(null);
   const drawStartCoordRef = useRef<{ x: number | null; y: number | null }>({ x: null, y: null });
-  const drawPathRef = useRef<ImageData[]>([]);
+  // const drawPathRef = useRef<ImageData[]>([]);
+  const { drawPathRef, pushNewImageData } = useDrawPathRef();
   const memoPrevImageSize = useRef<{ width: number; height: number }>({
     width: 0,
     height: 0,
@@ -94,7 +96,7 @@ function useCanvasDrawing() {
     updateMemorizedImageData(imageData)
       .then(() => updatememoPrevImageSize(imageData))
       .then(() => {
-        drawPathRef.current.push(imageData);
+        pushNewImageData(imageData);
         setDrawPathLength(drawPathRef.current.length);
       }); //실행 순서가 중요하여 async를 이용한 then 체이닝 적용.
   };
@@ -209,23 +211,17 @@ function useCanvasDrawing() {
     updateDrawPathRef(imageData);
 
     // indexedDB
-    debounce(() => {
-      const dataUrlList = [canvas.toDataURL()];
-
-      console.log('데이터 저장갯수 몇개니', memorizedImageData.current);
-      // 다 좋은데, canvas를 만들어서 이미지 url로 넣은담에 toURL 하는 과정이 너무 렉이거린다
-      // 그냥 imageData 그 자체로 저장하는 걸 고려해야할지도 모르겠다.
-      for (let imageData of memorizedImageData.current) {
-        const convertedImageData = convertImageDataToURL(imageData);
-        dataUrlList.push(convertedImageData);
-      }
+    const saveDataUrlToIndexedDb = () => {
+      const dataUrlList = [canvas.toDataURL(), ...convertImageDataToURL(memorizedImageData.current)];
 
       const saveData = {
         snapshot: 'recently saved image dataUrl',
         dataUrlList,
       };
       saveTransaction(tableEnum.memo, saveData, 'put', useSetMemoImpossible);
-    }, 500)();
+    };
+
+    saveDataUrlToIndexedDb();
   };
 
   const onMouseLeave = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
@@ -240,9 +236,15 @@ function useCanvasDrawing() {
     const context = canvasCtxRef.current;
     context?.clearRect(0, 0, canvas.width, canvas.height);
 
-    drawPathRef.current?.forEach((imageData) => {
-      context?.putImageData(imageData, 0, 0);
-    });
+    const lastDrawPath = drawPathRef.current[drawPathRef.current.length - 1];
+
+    if (lastDrawPath) {
+      const redrawTarget = [lastDrawPath, ...memorizedImageData.current];
+
+      redrawTarget.forEach((imageData) => {
+        context?.putImageData(imageData, 0, 0);
+      });
+    }
   };
 
   useEffect(() => {
