@@ -18,6 +18,11 @@ export const memoLengthAtom = atom<number>({
   default: 0,
 });
 
+export const memoLimitAtom = atom<number>({
+  key: 'memoLimitAtom',
+  default: 30,
+});
+
 export const useSetMemoImpossible = () => {
   const [_, setCanSaveMemo] = useRecoilImmerState(memoCanvasAtom);
   setCanSaveMemo((draft) => {
