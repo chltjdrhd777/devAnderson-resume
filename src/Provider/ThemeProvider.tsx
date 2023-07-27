@@ -6,8 +6,8 @@ import { themeMode } from 'styles/theme';
 function Index({ children }: PropsWithChildren) {
   // redux storage에 저장하고 해당 값을 쓰도록 하자
   // 그렇게 해야 하는 이유도 설명할 것 작성하자.
-  const user = useSelector(state => state.user);
-  const theme = themeMode(user.config.mode);
+  const mode = useSelector((state) => state.user.config.mode);
+  const theme = themeMode(mode);
 
   return <ThemeProvider theme={theme}>{children}</ThemeProvider>;
 }

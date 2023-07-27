@@ -62,6 +62,13 @@ const Button = styled.button<ButtonProps>`
   overflow: hidden;
 
   transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+  transform: scale(0.85);
+  opacity: 0.5;
+  &:hover {
+    transform: scale(1);
+    opacity: 1;
+  }
+
   ${({ isScrolled, isLoading }) =>
     isScrolled || isLoading
       ? css`

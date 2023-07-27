@@ -11,7 +11,7 @@ export const colors = {
   grayFive: '#9b9a97',
   pointColorGray: '#596891bf',
   pointColorPurple: '#ad8bf6',
-  pointColorYello: '#ffc114',
+  pointColorYellow: '#ffc114',
   pointColorCarrot: '#ff5248',
   pointColorBrown: '#E1AD49',
   pointColorMint: '#19cdca',
@@ -122,7 +122,7 @@ export const themeMode = (mode: ModeType) => {
   const modeCSS = {
     backgroundColor: mode === 'white' ? 'white' : colors.indigo,
     fontColor: mode === 'white' ? colors.black : colors.white,
-    pointColor: mode === 'white' ? colors.pointColorBlue : colors.pointColorYello,
+    pointColor: mode === 'white' ? colors.pointColorBlue : colors.pointColorYellow,
     subPointColor: mode === 'white' ? colors.pointColorGray : colors.beige,
     linkColor: mode === 'white' ? colors.pointColorPastelBlue : colors.pointColorMint,
   } as const;
