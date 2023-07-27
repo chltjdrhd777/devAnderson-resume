@@ -1,13 +1,23 @@
 import { Global, Theme, css, useTheme } from '@emotion/react';
+import { genMedia } from './theme';
 
 function GlobalStyle() {
-  const theme = useTheme();
-
-  const globalCSS = (theme: Theme) => css`
+  const globalCSS = css`
     :root {
       --zIndex-1st: 10000;
       --zIndex-2st: 9000;
       --zIndex-3st: 8000;
+
+      --header-height: 2.5rem;
+      --option-btn-right: 1rem;
+
+      ${genMedia(
+        'web(1024px)',
+        css`
+          --header-height: 3.2rem;
+          --option-btn-right: 2.5rem;
+        `,
+      )}
     }
 
     @font-face {
@@ -28,7 +38,7 @@ function GlobalStyle() {
       font-size: 62.5%;
       scroll-behavior: smooth;
       overflow-x: hidden;
-      background-color: ${theme.backgroundColor};
+      /* overscroll-behavior: none; */
     }
     body {
       font-size: 1.6rem;
@@ -72,7 +82,7 @@ function GlobalStyle() {
     }
   `;
 
-  return <Global styles={globalCSS(theme)} />;
+  return <Global styles={[globalCSS]} />;
 }
 
 export default GlobalStyle;

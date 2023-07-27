@@ -41,8 +41,6 @@ const Wrapper = styled.div``;
 const Main = styled.main`
   min-width: 100vw;
   min-height: 100vh;
-  background-color: ${({ theme }) => theme.backgroundColor};
-  transition: background-color 0.3s ease-in;
   color: ${({ theme }) => theme.fontColor};
   padding-top: calc(var(--header-height));
   padding-bottom: calc(var(--header-height) * 2);

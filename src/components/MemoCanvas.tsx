@@ -1,9 +1,10 @@
 import { css } from '@emotion/react';
 import styled from '@emotion/styled';
-import React, { CanvasHTMLAttributes, useEffect } from 'react';
+import React, { CanvasHTMLAttributes } from 'react';
 
 import useCanvasDrawing from 'hooks/useCanvasDrawing';
 import { useSelector } from 'redux/store';
+import CanvasMenu from './CanvasMenu';
 
 function MemoCanvas() {
   // todo 텍스트 넣기 기능 추가
@@ -27,10 +28,6 @@ function MemoCanvas() {
     stopDrawingForMobile,
   } = useCanvasDrawing();
 
-  //보기 모드일 때
-  // 1. 메서드들을 조건부로 할당하도록 설정하여 보기 모드가 true이면, 핸들러 없도록 함
-  // 2. 캔버스 아래에 있는 존재들 클릭 가능하도록 z-index레벨조정해야 함.
-
   const isMemoShown = (memo.isMemoShown && drawPathLength !== 0) || isCanvasOpen;
   const canvasAttrs = {
     onMouseMove: onDrawing,
@@ -45,6 +42,7 @@ function MemoCanvas() {
 
   return (
     <CanvasFrame isMemoShown={isMemoShown}>
+      <CanvasMenu />
       <Canvas ref={canvasRef} {...(isCanvasOpen && canvasAttrs)} />
     </CanvasFrame>
   );
@@ -59,7 +57,7 @@ const CanvasFrame = styled.div<{ isMemoShown: boolean }>`
 
   z-index: calc(var(--zIndex-2st) * -1);
   opacity: 0;
-  transition: opacity 0.1s ease-in;
+  transition: opacity 0.1s ease-in, z-index 0.1s ease-in;
 
   ${({ isMemoShown }) =>
     isMemoShown &&
@@ -68,7 +66,6 @@ const CanvasFrame = styled.div<{ isMemoShown: boolean }>`
       opacity: 1;
     `}
 `;
-
 const Canvas = styled.canvas``;
 
 export default MemoCanvas;

@@ -1,10 +1,10 @@
-import React, { DOMAttributes, PropsWithChildren } from 'react';
+import React, { DOMAttributes, HTMLAttributes, PropsWithChildren } from 'react';
 import { BaseButton, BaseButtonIconContainer } from '../Atom/round';
 import styled from '@emotion/styled';
 import { SerializedStyles, css } from '@emotion/react';
 import { colors, genMedia } from 'styles/theme';
 
-interface OptionProps extends DOMAttributes<HTMLButtonElement> {
+interface OptionProps extends HTMLAttributes<HTMLButtonElement> {
   additialCSS?: SerializedStyles;
 }
 function Option({ children, additialCSS, ...props }: PropsWithChildren<OptionProps>) {
@@ -14,7 +14,7 @@ function Option({ children, additialCSS, ...props }: PropsWithChildren<OptionPro
   // 3. Molecule 별로 개별적인 기능 => Props를 통해 Handler 건네받아서 적용
   return (
     <Button additialCSS={additialCSS} {...props}>
-      <ButtonIconContainer>{children}</ButtonIconContainer>
+      <ButtonIconContainer className="button-icon-container">{children}</ButtonIconContainer>
     </Button>
   );
 }
@@ -25,6 +25,7 @@ const Button = styled(BaseButton)<OptionProps>`
   border-radius: 100%;
   border: 1px solid ${colors.grayTwo};
   overflow: hidden;
+  background-color: ${({ theme }) => theme.backgroundColor};
 
   transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
   transform: scale(0.85);
