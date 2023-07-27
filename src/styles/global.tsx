@@ -1,7 +1,15 @@
-import { Global, Theme, css, useTheme } from '@emotion/react';
+import { Global, css, useTheme } from '@emotion/react';
 import { genMedia } from './theme';
+import { useEffect } from 'react';
 
 function GlobalStyle() {
+  const theme = useTheme();
+
+  useEffect(() => {
+    const html = document.querySelector('html');
+    html.style.backgroundColor = theme.backgroundColor;
+  }, [theme]);
+
   const globalCSS = css`
     :root {
       --zIndex-1st: 10000;
