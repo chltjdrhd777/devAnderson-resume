@@ -1,11 +1,13 @@
 import { css } from '@emotion/react';
 import styled from '@emotion/styled';
+import { checkMobile } from 'helper/checkMobile';
 import useRecoilImmerState from 'hooks/useImmerState';
 import React, { DOMAttributes, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import { memoCanvasAtom, memoContextAttrAtom } from 'recoil/memo';
 
 const ColorPicker = () => {
+  const isMobile = checkMobile();
   const colorBarCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const colorBarCanvasCtx = useRef<CanvasRenderingContext2D | null>(null);
   const colorBarRect = useRef<DOMRect | null>(null);
@@ -65,26 +67,21 @@ const ColorPicker = () => {
     context.fillRect(0, 0, parentWidth, parentHeight);
     context.fillStyle = valueGradient;
     context.fillRect(0, 0, parentWidth, parentHeight);
+
     // Draw circle
-    // context.beginPath();
-    // context.arc(pickerCircle.x, pickerCircle.y, pickerCircle.width, 0, Math.PI * 2);
-    // context.strokeStyle = 'black';
-    // context.stroke();
-    // context.closePath();
+    context.beginPath();
+    context.arc(pickerCircle.x, pickerCircle.y, pickerCircle.width, 0, Math.PI * 2);
+    context.strokeStyle = 'black';
+    context.stroke();
+    context.closePath();
   };
 
-  const handleRGBA = (
-    event: React.MouseEvent<HTMLCanvasElement, MouseEvent>,
-    context: CanvasRenderingContext2D,
-    setter?: (rgba: string) => any,
-  ) => {
+  const handleRGBA = (offsetY: number, context: CanvasRenderingContext2D, setter?: (rgba: string) => any) => {
     if (context) {
-      const mouseY = event.nativeEvent.offsetY;
-
       // 마우스 이벤트 발생 시점 기준으로 1x1 픽셀 데이터를 가져온다.
       // 해당 픽셀의 data 프로퍼티는 배열을 값으로 가지며, 순서대로 RGBA이다. (즉 투명도는 A/255이다.)
 
-      const pixelData = context?.getImageData(0, mouseY, 1, 1).data;
+      const pixelData = context?.getImageData(0, offsetY, 1, 1).data;
 
       const rgba = `rgba(${pixelData[0]},${pixelData[1]},${pixelData[2]},${pixelData[3] / 255})`;
       if (rgba === 'rgba(0,0,0,0)') return;
@@ -97,40 +94,57 @@ const ColorPicker = () => {
     const offsetY = event.nativeEvent.offsetY;
 
     setPointerHeight(offsetY);
-    handleRGBA(event, colorBarCanvasCtx.current, (rgba) => {
+    handleRGBA(offsetY, colorBarCanvasCtx.current, (rgba) => {
       setPickerBackground(rgba);
     });
   };
-  const handlePointerHeightForMobile = (event: React.TouchEvent<HTMLCanvasElement>) => {};
+  const handlePointerHeightForMobile = (event: React.TouchEvent<HTMLCanvasElement>) => {
+    const touch = event.changedTouches[0];
+    const rect = colorBarRect.current;
+    const offsetY = touch.clientY - rect.top;
+
+    if (0 <= offsetY && touch.clientY <= rect.bottom) {
+      setPointerHeight(offsetY);
+    }
+    handleRGBA(offsetY, colorBarCanvasCtx.current, (rgba) => {
+      setPickerBackground(rgba);
+    });
+  };
 
   const colorBarMethods: DOMAttributes<HTMLCanvasElement> & { [key: string]: any } = {
     onMouseDown(event) {
+      if (isMobile) return;
       setIsColorBarPressed(true);
-
       handlePointerHeight(event);
     },
-
     onMouseMove(event) {
-      if (isColorBarPressed) {
+      if (isColorBarPressed && !isMobile) {
         handlePointerHeight(event);
       }
     },
-
     onMouseUp() {
-      if (isColorBarPressed) {
+      if (isColorBarPressed && !isMobile) {
         //캔버스에서 mouseUp이벤트는 항상 상태를 조건으로 걸어야 불필요한 mouseUp이벤트를 방지할 수 있다.
         setIsColorBarPressed(false);
       }
     },
-
-    onMouseLeave() {
+    onTouchStart(event) {
+      setIsColorBarPressed(true);
+      handlePointerHeightForMobile(event);
+    },
+    onTouchMove(event) {
       if (isColorBarPressed) {
-        //캔버스에서 mouseUp이벤트는 항상 상태를 조건으로 걸어야 불필요한 mouseUp이벤트를 방지할 수 있다.
+        event.preventDefault();
+        handlePointerHeightForMobile(event);
+      }
+    },
+    onTouchEnd() {
+      if (isColorBarPressed) {
         setIsColorBarPressed(false);
       }
     },
   };
-  colorBarCanvasRef.current?.addEventListener('touchmove', colorBarMethods.onMouseMove as any, { passive: false });
+  colorBarCanvasRef.current?.addEventListener('touchmove', colorBarMethods.onTouchMove as any, { passive: false });
 
   useEffect(() => {
     initPicker();
@@ -141,6 +155,7 @@ const ColorPicker = () => {
   }, []);
 
   useEffect(() => {
+    //Rect를 계속 호출시키면 부하가 크므로, 첫 랜더링 시에 만들어서 기록해둔다.
     const updateRects = () => {
       colorBarRect.current = colorBarCanvasRef.current?.getBoundingClientRect();
     };
@@ -169,7 +184,10 @@ const ColorPicker = () => {
           onMouseDown={colorBarMethods.onMouseDown}
           onMouseMove={colorBarMethods.onMouseMove}
           onMouseUp={colorBarMethods.onMouseUp}
-          onMouseLeave={colorBarMethods.onMouseLeave}
+          onMouseLeave={colorBarMethods.onMouseUp}
+          onTouchStart={colorBarMethods.onTouchStart}
+          onTouchEnd={colorBarMethods.onTouchEnd}
+          onTouchCancel={colorBarMethods.onTouchEnd}
         />
       </ColorBarCanvasFrame>
     </Wrapper>
