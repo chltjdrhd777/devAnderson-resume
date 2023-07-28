@@ -4,7 +4,7 @@ import { converURLToImageData } from 'helper/converURLToImageData';
 import { debounce } from 'helper/debounce';
 import React, { useEffect, useRef, useState } from 'react';
 import { useRecoilValue } from 'recoil';
-import { memoCanvasAtom, memoLengthAtom, useSetMemoImpossible } from 'recoil/memo';
+import { memoCanvasAtom, memoContextAttrAtom, memoLengthAtom, useSetMemoImpossible } from 'recoil/memo';
 import { colors } from 'styles/theme';
 import useIndexedDB, { tableEnum, indexing } from './useIndexedDB';
 import useRecoilImmerState from './useImmerState';
@@ -40,12 +40,8 @@ function useCanvasDrawing() {
 
   const [drawPathLength, setDrawPathLength] = useRecoilImmerState(memoLengthAtom);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [contextConfig, setContextConfig] = useState<Partial<CanvasRenderingContext2D>>({
-    strokeStyle: colors.black,
-    lineWidth: 2,
-    lineCap: 'round',
-    lineJoin: 'round',
-  });
+
+  const memoContextAttr = useRecoilValue(memoContextAttrAtom);
   const { database, saveTransaction, getLastValueFromTable } = useIndexedDB({ dbName: 'resume-indexedDB' });
 
   //METHOD
@@ -75,10 +71,10 @@ function useCanvasDrawing() {
         setDrawPathLength(drawPathRef.current.length);
       }); //실행 순서가 중요하여 async를 이용한 then 체이닝 적용.
   };
-  const applyContextConfig = () => {
+  const applymemoContextAttr = () => {
     const context = canvasCtxRef.current ?? {};
 
-    Object.entries(contextConfig).forEach(([key, value]) => {
+    Object.entries(memoContextAttr).forEach(([key, value]) => {
       context[key] = value;
     });
   };
@@ -122,7 +118,7 @@ function useCanvasDrawing() {
         context?.moveTo(x, y);
       } else {
         // 그릴 때, 해당 좌표까지 픽셀경로를 만들고(lineTo) 그 픽셀을 채워넣어서 라인을 만든다(stroke).
-        applyContextConfig();
+        applymemoContextAttr();
         context?.lineTo(x, y);
         context?.stroke();
       }
@@ -134,7 +130,7 @@ function useCanvasDrawing() {
       const context = canvasCtxRef.current;
       const x = e.touches[0].pageX;
       const y = e.touches[0].pageY;
-      applyContextConfig();
+      applymemoContextAttr();
 
       context?.lineTo(x, y);
       context?.stroke();
@@ -149,16 +145,19 @@ function useCanvasDrawing() {
       return; //debugger 환경에서 touchEnd와 같이 발생하는 부분을 막기 위함.
     }
 
-    const endX = e.pageX;
-    const endY = e.pageY;
-    const { x: startX, y: startY } = drawStartCoordRef.current;
+    if (isDrawing) {
+      //모든 캔버스에서 이 조건은 반드시 필요하다. 해당 조건이 없으면 어느 장소에서 클릭을 유지한 상태로 캔버스에 마우스를 떼도 onMoseUp이벤트 동작 조건으로 인식하고 발동된다.
+      const endX = e.pageX;
+      const endY = e.pageY;
+      const { x: startX, y: startY } = drawStartCoordRef.current;
 
-    if (integerDiff(endX, startX) !== 0 || integerDiff(endY, startY) !== 0) {
-      // 제자리 클릭이 아니라면, 드로잉이므로 기록한다.
-      saveDrawing();
+      if (integerDiff(endX, startX) !== 0 || integerDiff(endY, startY) !== 0) {
+        // 제자리 클릭이 아니라면, 드로잉이므로 기록한다.
+        saveDrawing();
+      }
+
+      resetDrawingData();
     }
-
-    resetDrawingData();
   };
 
   const stopDrawingForMobile = (e: React.TouchEvent<HTMLCanvasElement>) => {
@@ -166,15 +165,17 @@ function useCanvasDrawing() {
     const endY = e.changedTouches[0]?.pageY;
     const { x: startX, y: startY } = drawStartCoordRef.current;
 
-    if (
-      (e.changedTouches !== undefined && e.changedTouches.length !== 0 && integerDiff(endX, startX) !== 0) ||
-      integerDiff(endY, startY) !== 0
-    ) {
-      // 제자리 터치가 아니라면, 드로잉이므로 기록한다.
-      saveDrawing();
-    }
+    if (isDrawing) {
+      if (
+        (e.changedTouches !== undefined && e.changedTouches.length !== 0 && integerDiff(endX, startX) !== 0) ||
+        integerDiff(endY, startY) !== 0
+      ) {
+        // 제자리 터치가 아니라면, 드로잉이므로 기록한다.
+        saveDrawing();
+      }
 
-    resetDrawingData();
+      resetDrawingData();
+    }
   };
 
   const saveDrawing = () => {

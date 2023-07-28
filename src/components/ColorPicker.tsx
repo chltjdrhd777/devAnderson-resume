@@ -1,14 +1,21 @@
+import { css } from '@emotion/react';
 import styled from '@emotion/styled';
+import useRecoilImmerState from 'hooks/useImmerState';
 import React, { DOMAttributes, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { colors } from 'styles/theme';
+import { useRecoilValue } from 'recoil';
+import { memoCanvasAtom, memoContextAttrAtom } from 'recoil/memo';
 
 const ColorPicker = () => {
   const colorBarCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const colorBarCanvasCtx = useRef<CanvasRenderingContext2D | null>(null);
+  const colorBarRect = useRef<DOMRect | null>(null);
   const pickerCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const pickerCanvasCtx = useRef<CanvasRenderingContext2D | null>(null);
 
+  const { isCanvasOpen } = useRecoilValue(memoCanvasAtom);
+  const [memoContextAttr, setMemoAttr] = useRecoilImmerState(memoContextAttrAtom);
   const [isColorBarPressed, setIsColorBarPressed] = useState(false);
+  const [PointerHeight, setPointerHeight] = useState(0);
 
   const [pickerBackground, setPickerBackground] = useState<string>('rgba(255, 0, 0, 1)');
   const [pickerCircle, setPickerCircle] = useState({ x: 10, y: 10, width: 7, height: 7 });
@@ -54,8 +61,6 @@ const ColorPicker = () => {
     valueGradient.addColorStop(0, 'rgba(0, 0, 0, 0)'); //transparent
     valueGradient.addColorStop(1, 'rgba(0, 0, 0, 1)'); //black
 
-    const colorGradient = context.createLinearGradient(0, 0, parentWidth, 0);
-
     context.fillStyle = saturationGradient;
     context.fillRect(0, 0, parentWidth, parentHeight);
     context.fillStyle = valueGradient;
@@ -71,11 +76,9 @@ const ColorPicker = () => {
   const handleRGBA = (
     event: React.MouseEvent<HTMLCanvasElement, MouseEvent>,
     context: CanvasRenderingContext2D,
-    type: 'colorBar' | 'colorPicker',
-    setter?: Function,
+    setter?: (rgba: string) => any,
   ) => {
     if (context) {
-      const mouseX = event.nativeEvent.offsetX;
       const mouseY = event.nativeEvent.offsetY;
 
       // 마우스 이벤트 발생 시점 기준으로 1x1 픽셀 데이터를 가져온다.
@@ -84,48 +87,52 @@ const ColorPicker = () => {
       const pixelData = context?.getImageData(0, mouseY, 1, 1).data;
 
       const rgba = `rgba(${pixelData[0]},${pixelData[1]},${pixelData[2]},${pixelData[3] / 255})`;
-      if (type === 'colorBar' && rgba === 'rgba(0,0,0,0)') return;
+      if (rgba === 'rgba(0,0,0,0)') return;
 
       setter && setter(rgba);
     }
   };
 
-  const colorBarMethods: DOMAttributes<HTMLCanvasElement> = {
-    onMouseDown(event) {},
+  const handlePointerHeight = (event: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
+    const offsetY = event.nativeEvent.offsetY;
+
+    setPointerHeight(offsetY);
+    handleRGBA(event, colorBarCanvasCtx.current, (rgba) => {
+      setPickerBackground(rgba);
+    });
+  };
+  const handlePointerHeightForMobile = (event: React.TouchEvent<HTMLCanvasElement>) => {};
+
+  const colorBarMethods: DOMAttributes<HTMLCanvasElement> & { [key: string]: any } = {
+    onMouseDown(event) {
+      setIsColorBarPressed(true);
+
+      handlePointerHeight(event);
+    },
 
     onMouseMove(event) {
-      handleRGBA(event, colorBarCanvasCtx.current, 'colorBar', setPickerBackground);
+      if (isColorBarPressed) {
+        handlePointerHeight(event);
+      }
+    },
+
+    onMouseUp() {
+      if (isColorBarPressed) {
+        //캔버스에서 mouseUp이벤트는 항상 상태를 조건으로 걸어야 불필요한 mouseUp이벤트를 방지할 수 있다.
+        setIsColorBarPressed(false);
+      }
+    },
+
+    onMouseLeave() {
+      if (isColorBarPressed) {
+        //캔버스에서 mouseUp이벤트는 항상 상태를 조건으로 걸어야 불필요한 mouseUp이벤트를 방지할 수 있다.
+        setIsColorBarPressed(false);
+      }
     },
   };
+  colorBarCanvasRef.current?.addEventListener('touchmove', colorBarMethods.onMouseMove as any, { passive: false });
 
-  const onMouseDown = (e) => {
-    let currentX = e.clientX - pickerCanvasRef.current.offsetLeft;
-    let currentY = e.clientY - pickerCanvasRef.current.offsetTop;
-    if (
-      currentY > pickerCircle.y &&
-      currentY < pickerCircle.y + pickerCircle.width &&
-      currentX > pickerCircle.x &&
-      currentX < pickerCircle.x + pickerCircle.width
-    ) {
-      document.addEventListener('mousemove', onMouseMove);
-      document.addEventListener('mouseup', onMouseUp);
-    } else {
-      setPickerCircle({ x: currentX, y: currentY, width: pickerCircle.width, height: pickerCircle.height });
-    }
-  };
-
-  const onMouseMove = (e) => {
-    let currentX = e.clientX - pickerCanvasRef.current.offsetLeft;
-    let currentY = e.clientY - pickerCanvasRef.current.offsetTop;
-    setPickerCircle({ x: currentX, y: currentY, width: pickerCircle.width, height: pickerCircle.height });
-  };
-
-  const onMouseUp = () => {
-    document.removeEventListener('mousemove', onMouseMove);
-    document.removeEventListener('mouseup', onMouseUp);
-  };
-
-  useLayoutEffect(() => {
+  useEffect(() => {
     initPicker();
     initColorBar();
 
@@ -133,27 +140,37 @@ const ColorPicker = () => {
     pickerCanvasCtx.current = pickerCanvasRef.current?.getContext('2d', { willReadFrequently: true }) ?? null;
   }, []);
 
+  useEffect(() => {
+    const updateRects = () => {
+      colorBarRect.current = colorBarCanvasRef.current?.getBoundingClientRect();
+    };
+
+    updateRects();
+
+    window.addEventListener('resize', updateRects);
+    return () => {
+      window.removeEventListener('resize', updateRects);
+    };
+  }, []);
+
   return (
     <Wrapper>
       <PickerCanvasFrame background={pickerBackground}>
-        <PickerCanvas ref={pickerCanvasRef} onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} />
+        <PickerCanvas ref={pickerCanvasRef} />
       </PickerCanvasFrame>
 
       <ColorBarCanvasFrame>
-        <ColorBar>
-          <svg
-            width="6"
-            height="6"
-            fill="white"
-            stroke="black"
-            strokeWidth="0.8"
-            viewBox="0 0 20 20"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path d="M0,10 L18,0 Q18,0 20,2 L20,18 Q20,18 18,20 L0,10 Z" />
-          </svg>
-        </ColorBar>
-        <ColorBarCanvas ref={colorBarCanvasRef} onMouseMove={colorBarMethods.onMouseMove} />
+        <ColorBarPointer pointerHeight={PointerHeight}>
+          <Pointer direction="left" />
+          <Pointer direction="right" />
+        </ColorBarPointer>
+        <ColorBarCanvas
+          ref={colorBarCanvasRef}
+          onMouseDown={colorBarMethods.onMouseDown}
+          onMouseMove={colorBarMethods.onMouseMove}
+          onMouseUp={colorBarMethods.onMouseUp}
+          onMouseLeave={colorBarMethods.onMouseLeave}
+        />
       </ColorBarCanvasFrame>
     </Wrapper>
   );
@@ -177,12 +194,44 @@ const ColorBarCanvasFrame = styled.div`
   height: 100%;
   position: relative;
 `;
-const ColorBar = styled.div`
+const ColorBarCanvas = styled.canvas``;
+
+const ColorBarPointer = styled.div<{ pointerHeight: number }>`
   width: 100%;
   position: absolute;
-  top: 0;
-  background-color: blue;
+  top: ${({ pointerHeight }) => pointerHeight + 'px'};
 `;
-const ColorBarCanvas = styled.canvas``;
+const PointerSVG = styled.svg<{ direction: 'left' | 'right' }>`
+  --pointer-size: 0.6rem;
+
+  width: var(--pointer-size);
+  height: var(--pointer-size);
+  position: absolute;
+  top: calc(var(--pointer-size) * -0.5);
+
+  ${({ direction }) =>
+    direction === 'left'
+      ? css`
+          right: calc(var(--pointer-size) * -1);
+        `
+      : css`
+          transform: scaleX(-1);
+          left: calc(var(--pointer-size) * -1);
+        `};
+`;
+const Pointer = ({ direction }: { direction: 'left' | 'right' }) => {
+  return (
+    <PointerSVG
+      direction={direction}
+      fill="white"
+      stroke="black"
+      strokeWidth="0.8"
+      viewBox="0 0 20 20"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M0,10 L18,0 Q18,0 20,2 L20,18 Q20,18 18,20 L0,10 Z" />
+    </PointerSVG>
+  );
+};
 
 export default ColorPicker;

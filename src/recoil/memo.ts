@@ -1,5 +1,6 @@
 import useRecoilImmerState from 'hooks/useImmerState';
 import { atom } from 'recoil';
+import { colors } from 'styles/theme';
 
 export interface memoCanvasAtom {
   isCanvasOpen: boolean;
@@ -21,6 +22,16 @@ export const memoLengthAtom = atom<number>({
 export const memoLimitAtom = atom<number>({
   key: 'memoLimitAtom',
   default: 30,
+});
+
+export const memoContextAttrAtom = atom<Partial<CanvasRenderingContext2D>>({
+  key: 'memoContextAttrAtom',
+  default: {
+    strokeStyle: colors.black,
+    lineWidth: 2,
+    lineCap: 'round',
+    lineJoin: 'round',
+  },
 });
 
 export const useSetMemoImpossible = () => {
