@@ -126,7 +126,6 @@ function useCanvasDrawing() {
   };
   const onDrawingForMobile = (e: TouchEvent) => {
     if (isDrawing && isCanvasOpen) {
-      e.preventDefault();
       const context = canvasCtxRef.current;
       const x = e.touches[0].pageX;
       const y = e.touches[0].pageY;
@@ -136,9 +135,6 @@ function useCanvasDrawing() {
       context?.stroke();
     }
   };
-  // 모바일은 터치드래그 막아야하므로 "e.preventDefault() 해주기 위하여 passive를 false로 둔다."
-  // passive[default : true] = 모바일 환경에서 부드러운 스크롤 위해 스크롤 처리 미리하도록 함. 이게 true일 경우, preventDefault 사용 불가.
-  canvasRef.current?.addEventListener('touchmove', onDrawingForMobile, { passive: false });
 
   const stopDrawing = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
     if (isMobile) {
@@ -270,6 +266,7 @@ function useCanvasDrawing() {
     stopDrawing,
     onMouseLeave,
     startDrawingForMobile,
+    onDrawingForMobile,
     stopDrawingForMobile,
   };
 }

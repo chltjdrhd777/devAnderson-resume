@@ -25,6 +25,7 @@ function MemoCanvas() {
     stopDrawing,
     onMouseLeave,
     startDrawingForMobile,
+    onDrawingForMobile,
     stopDrawingForMobile,
   } = useCanvasDrawing();
 
@@ -35,6 +36,7 @@ function MemoCanvas() {
     onMouseUp: stopDrawing,
     onMouseLeave: onMouseLeave,
     onTouchStart: startDrawingForMobile,
+    onTouchMove: onDrawingForMobile as any,
     onTouchEnd: stopDrawingForMobile,
     onTouchCancel: stopDrawingForMobile,
     onContextMenu: (e) => e.preventDefault(),
@@ -43,7 +45,7 @@ function MemoCanvas() {
   return (
     <CanvasFrame isMemoShown={isMemoShown}>
       <CanvasMenu />
-      <Canvas ref={canvasRef} {...(isCanvasOpen && canvasAttrs)} />
+      <Canvas ref={canvasRef} {...(isCanvasOpen && canvasAttrs)} isCanvasOpen={isCanvasOpen} />
     </CanvasFrame>
   );
 }
@@ -66,6 +68,8 @@ const CanvasFrame = styled.div<{ isMemoShown: boolean }>`
       opacity: 1;
     `}
 `;
-const Canvas = styled.canvas``;
+const Canvas = styled.canvas<{ isCanvasOpen: boolean }>`
+  touch-action: ${({ isCanvasOpen }) => (isCanvasOpen ? 'none' : 'initial')};
+`;
 
 export default MemoCanvas;
