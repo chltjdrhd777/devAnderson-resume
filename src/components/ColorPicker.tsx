@@ -134,7 +134,6 @@ const ColorPicker = () => {
     },
     onTouchMove(event) {
       if (isColorBarPressed) {
-        event.preventDefault();
         handlePointerHeightForMobile(event);
       }
     },
@@ -144,7 +143,7 @@ const ColorPicker = () => {
       }
     },
   };
-  colorBarCanvasRef.current?.addEventListener('touchmove', colorBarMethods.onTouchMove as any, { passive: false });
+  // colorBarCanvasRef.current?.addEventListener('touchmove', colorBarMethods.onTouchMove as any, { passive: false });
 
   useEffect(() => {
     initPicker();
@@ -186,6 +185,7 @@ const ColorPicker = () => {
           onMouseUp={colorBarMethods.onMouseUp}
           onMouseLeave={colorBarMethods.onMouseUp}
           onTouchStart={colorBarMethods.onTouchStart}
+          onTouchMove={colorBarMethods.onTouchMove}
           onTouchEnd={colorBarMethods.onTouchEnd}
           onTouchCancel={colorBarMethods.onTouchEnd}
         />
@@ -205,14 +205,18 @@ const PickerCanvasFrame = styled.div<{ background: string }>`
   margin-right: 1rem;
   background: ${({ background }) => background};
 `;
-const PickerCanvas = styled.canvas``;
+const PickerCanvas = styled.canvas`
+  touch-action: none;
+`;
 
 const ColorBarCanvasFrame = styled.div`
   width: 2rem;
   height: 100%;
   position: relative;
 `;
-const ColorBarCanvas = styled.canvas``;
+const ColorBarCanvas = styled.canvas`
+  touch-action: none;
+`;
 
 const ColorBarPointer = styled.div<{ pointerHeight: number }>`
   width: 100%;
