@@ -4,7 +4,7 @@ import { converURLToImageData } from 'helper/converURLToImageData';
 import { debounce } from 'helper/debounce';
 import React, { useEffect, useRef, useState } from 'react';
 import { useRecoilValue } from 'recoil';
-import { memoCanvasAtom, memoContextAttrAtom, memoLengthAtom, useSetMemoImpossible } from 'recoil/memo';
+import { memoCanvasAtom, memoContextAttrAtom, memoLengthAtom, menuConfigAtom, useSetMemoImpossible } from 'recoil/memo';
 import { colors } from 'styles/theme';
 import useIndexedDB, { tableEnum, indexing } from './useIndexedDB';
 import useRecoilImmerState from './useImmerState';
@@ -27,6 +27,7 @@ interface Memo {
 
 function useCanvasDrawing() {
   const isCanvasOpen = useRecoilValue(memoCanvasAtom).isCanvasOpen;
+  const { mode } = useRecoilValue(menuConfigAtom);
   const isMobile = checkMobile();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasCtxRef = useRef<CanvasRenderingContext2D | null>(null);
@@ -84,21 +85,12 @@ function useCanvasDrawing() {
     drawStartCoordRef.current = { x: null, y: null };
   };
 
+  //! mouse event handler
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
     setIsDrawing(true);
     const context = canvasCtxRef.current;
     const x = e.nativeEvent.pageX;
     const y = e.nativeEvent.pageY;
-    drawStartCoordRef.current = { x, y };
-
-    context?.beginPath();
-    context?.moveTo(x, y);
-  };
-  const startDrawingForMobile = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    setIsDrawing(true);
-    const context = canvasCtxRef.current;
-    const x = e.touches[0].pageX;
-    const y = e.touches[0].pageY;
     drawStartCoordRef.current = { x, y };
 
     context?.beginPath();
@@ -110,7 +102,8 @@ function useCanvasDrawing() {
     const x = e.nativeEvent.pageX;
     const y = e.nativeEvent.pageY;
 
-    if (isCanvasOpen) {
+    if (isCanvasOpen && isDrawing) {
+      //더블클릭으로 인한 드로잉을 막기 위해 isDrawing 상태를 조건으로 걸어둔다.
       // 그리지 않을 때, 마우스가 움직이면 canvas의 시작점을 reset하고(beginPath) 재설정(moveTo).
 
       if (!isDrawing) {
@@ -122,17 +115,6 @@ function useCanvasDrawing() {
         context?.lineTo(x, y);
         context?.stroke();
       }
-    }
-  };
-  const onDrawingForMobile = (e: TouchEvent) => {
-    if (isDrawing && isCanvasOpen) {
-      const context = canvasCtxRef.current;
-      const x = e.touches[0].pageX;
-      const y = e.touches[0].pageY;
-      applymemoContextAttr();
-
-      context?.lineTo(x, y);
-      context?.stroke();
     }
   };
 
@@ -156,21 +138,10 @@ function useCanvasDrawing() {
     }
   };
 
-  const stopDrawingForMobile = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    const endX = e.changedTouches[0]?.pageX;
-    const endY = e.changedTouches[0]?.pageY;
-    const { x: startX, y: startY } = drawStartCoordRef.current;
-
-    if (isDrawing) {
-      if (
-        (e.changedTouches !== undefined && e.changedTouches.length !== 0 && integerDiff(endX, startX) !== 0) ||
-        integerDiff(endY, startY) !== 0
-      ) {
-        // 제자리 터치가 아니라면, 드로잉이므로 기록한다.
-        saveDrawing();
-      }
-
-      resetDrawingData();
+  const onMouseLeave = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
+    const { x, y } = drawStartCoordRef.current;
+    if (x !== null && y !== null) {
+      stopDrawing(e);
     }
   };
 
@@ -196,11 +167,52 @@ function useCanvasDrawing() {
     saveDataUrlToIndexedDb();
   };
 
-  const onMouseLeave = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
-    const { x, y } = drawStartCoordRef.current;
-    if (x !== null && y !== null) {
-      stopDrawing(e);
+  //! mobile device(phone or tablet) handler
+  const checkPointerType = (pointerType: 'mouse' | 'touch' | 'pen', callback: Function) => {
+    if (pointerType === mode) {
+      callback();
     }
+  };
+  const startDrawingForMobile = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    checkPointerType(e.pointerType, () => {
+      setIsDrawing(true);
+      const context = canvasCtxRef.current;
+      const x = e.pageX;
+      const y = e.pageY;
+      drawStartCoordRef.current = { x, y };
+
+      context?.beginPath();
+      context?.moveTo(x, y);
+    });
+  };
+  const onDrawingForMobile = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    checkPointerType(e.pointerType, () => {
+      if (isDrawing && isCanvasOpen) {
+        const context = canvasCtxRef.current;
+        const x = e.pageX;
+        const y = e.pageY;
+        applymemoContextAttr();
+
+        context?.lineTo(x, y);
+        context?.stroke();
+      }
+    });
+  };
+  const stopDrawingForMobile = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    checkPointerType(e.pointerType, () => {
+      const endX = e.pageX;
+      const endY = e.pageY;
+      const { x: startX, y: startY } = drawStartCoordRef.current;
+
+      if (isDrawing) {
+        if (integerDiff(endX, startX) !== 0 || integerDiff(endY, startY) !== 0) {
+          // 제자리 터치가 아니라면, 드로잉이므로 기록한다.
+          saveDrawing();
+        }
+
+        resetDrawingData();
+      }
+    });
   };
 
   const redraw = () => {
@@ -229,16 +241,17 @@ function useCanvasDrawing() {
     const updateCanvasSize = () => {
       canvas.width = parentElement.clientWidth;
       canvas.height = parentElement.clientHeight;
-
       debounce(redraw, 500)();
     };
     updateCanvasSize();
 
-    window.addEventListener('resize', updateCanvasSize);
-    return () => {
-      window.removeEventListener('resize', updateCanvasSize);
-    };
-  }, []);
+    if (!isMobile) {
+      window.addEventListener('resize', updateCanvasSize);
+      return () => {
+        window.removeEventListener('resize', updateCanvasSize);
+      };
+    }
+  }, [isMobile]);
 
   useEffect(() => {
     // 첫 진입시 IndexedDB가 초기화되는 것을 감지하고 그 안에 있는 데이터를 가져오는 로직

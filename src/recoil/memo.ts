@@ -6,6 +6,13 @@ export interface memoCanvasAtom {
   isCanvasOpen: boolean;
   canSaveMemo: boolean;
 }
+
+export interface MenuConfigAtom {
+  tool: 'pen' | 'ereaser';
+  mode: 'pen' | 'touch';
+  pressure: boolean;
+}
+
 export const memoCanvasAtom = atom<memoCanvasAtom>({
   key: 'memoCanvasAtom',
   default: {
@@ -31,6 +38,15 @@ export const memoContextAttrAtom = atom<Partial<CanvasRenderingContext2D>>({
     lineWidth: 2,
     lineCap: 'round',
     lineJoin: 'round',
+  },
+});
+
+export const menuConfigAtom = atom<MenuConfigAtom>({
+  key: 'menuConfigAtom',
+  default: {
+    tool: 'pen',
+    mode: 'pen',
+    pressure: false,
   },
 });
 
