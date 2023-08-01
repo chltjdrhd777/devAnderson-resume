@@ -158,7 +158,7 @@ const Container = styled.div`
 
   & .fadeIn {
     animation-name: ${({ theme }) => theme.animations.fadeIn};
-    animation-duration: 2.5s;
+    animation-duration: 2s;
     animation-delay: 0.22s;
     animation-timing-function: cubic-bezier(0, 0.95, 0.48, 0.94);
     animation-fill-mode: both;

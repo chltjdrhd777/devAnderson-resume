@@ -5,6 +5,9 @@ import React, { CanvasHTMLAttributes } from 'react';
 import useCanvasDrawing from 'hooks/useCanvasDrawing';
 import { useSelector } from 'redux/store';
 import CanvasMenu from './CanvasMenu';
+import { useRecoilValue } from 'recoil';
+import { menuConfigAtom } from 'recoil/memo';
+import { checkMobile } from 'helper/checkMobile';
 
 function MemoCanvas() {
   // todo 텍스트 넣기 기능 추가
@@ -14,7 +17,9 @@ function MemoCanvas() {
   // ctrl + Z (진짜 ctrl+z도 되고, 버튼으로도 되고)
   // 전부 지우기
 
+  const isMobile = checkMobile();
   const memo = useSelector((state) => state.user.memo); //사용자별 영속성이어야 하기에 Redux-persist로 로컬관리
+  const { mode } = useRecoilValue(menuConfigAtom);
 
   const {
     isCanvasOpen,
@@ -31,15 +36,16 @@ function MemoCanvas() {
 
   const isMemoShown = (memo.isMemoShown && drawPathLength !== 0) || isCanvasOpen;
   const canvasAttrs = {
+    onMouseDown: isMobile && mode === 'pen' ? (e) => e.preventDefault() : startDrawing, //pen 이벤트는 마우스 이벤트를 공유하기에, 조건을 걸어서 시작을 막아야 함.
     onMouseMove: onDrawing,
-    onMouseDown: startDrawing,
     onMouseUp: stopDrawing,
     onMouseLeave: onMouseLeave,
-    onTouchStart: startDrawingForMobile,
-    onTouchMove: onDrawingForMobile as any,
-    onTouchEnd: stopDrawingForMobile,
-    onTouchCancel: stopDrawingForMobile,
-    onContextMenu: (e) => e.preventDefault(),
+    onPointerDown: startDrawingForMobile,
+    onPointerMove: onDrawingForMobile,
+    onPointerUp: stopDrawingForMobile,
+    onContextMenu: (e) => e.preventDefault(), // 우클릭 막기
+    onDoubleClick: (e) => e.preventDefault(), // 더클블릭 막기
+    onTouchStart: (e) => e.preventDefault(), // 터치 이벤트 시작점 막기(어차피 pointer에서 터치 처리중이고, 막아놔야 더블터치 이벤트 감지 막을 수 있다.)
   } as CanvasHTMLAttributes<HTMLCanvasElement>;
 
   return (
