@@ -1,6 +1,6 @@
 import { css } from '@emotion/react';
 import styled from '@emotion/styled';
-import React, { CanvasHTMLAttributes } from 'react';
+import React, { CanvasHTMLAttributes, useLayoutEffect } from 'react';
 
 import useCanvasDrawing from 'hooks/useCanvasDrawing';
 import { useSelector } from 'redux/store';
@@ -43,10 +43,13 @@ function MemoCanvas() {
     onPointerDown: startDrawingForMobile,
     onPointerMove: onDrawingForMobile,
     onPointerUp: stopDrawingForMobile,
-    onContextMenu: (e) => e.preventDefault(), // 우클릭 막기
-    onDoubleClick: (e) => e.preventDefault(), // 더클블릭 막기
-    onTouchStart: (e) => e.preventDefault(), // 터치 이벤트 시작점 막기(어차피 pointer에서 터치 처리중이고, 막아놔야 더블터치 이벤트 감지 막을 수 있다.)
   } as CanvasHTMLAttributes<HTMLCanvasElement>;
+
+  useLayoutEffect(() => {
+    canvasRef.current.addEventListener('contextmenu', (e) => e.preventDefault(), { passive: false }); // 우클릭 막기
+    canvasRef.current.addEventListener('dblclick', (e) => e.preventDefault(), { passive: false }); // 더클블릭 막기
+    canvasRef.current.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false }); // 터치 이벤트 시작점 막기(어차피 pointer에서 터치 처리중이고, 막아놔야 더블터치 이벤트 감지 막을 수 있다.)
+  }, []);
 
   return (
     <CanvasFrame isMemoShown={isMemoShown}>
