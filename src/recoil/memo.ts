@@ -31,13 +31,38 @@ export const memoLimitAtom = atom<number>({
   default: 30,
 });
 
-export const memoContextAttrAtom = atom<Partial<CanvasRenderingContext2D>>({
+export const memoContextAttrAtom = atom<
+  Partial<
+    CanvasRenderingContext2D & {
+      pickerBackground: string;
+    }
+  >
+>({
   key: 'memoContextAttrAtom',
   default: {
+    pickerBackground: 'rgba(255, 0, 0, 1)',
     strokeStyle: colors.black,
     lineWidth: 2,
     lineCap: 'round',
     lineJoin: 'round',
+  },
+});
+
+export interface PickerCircle {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  selectedColor: string;
+}
+export const pickerCircleAtom = atom<PickerCircle>({
+  key: 'pickerCircleAtom',
+  default: {
+    x: 10,
+    y: 10,
+    width: 7,
+    height: 7,
+    selectedColor: 'rgba(255, 255, 255, 1)',
   },
 });
 
