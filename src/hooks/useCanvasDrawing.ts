@@ -4,7 +4,14 @@ import { converURLToImageData } from 'helper/converURLToImageData';
 import { debounce } from 'helper/debounce';
 import React, { useEffect, useRef, useState } from 'react';
 import { useRecoilValue } from 'recoil';
-import { memoCanvasAtom, memoContextAttrAtom, memoLengthAtom, menuConfigAtom, useSetMemoImpossible } from 'recoil/memo';
+import {
+  memoCanvasAtom,
+  memoContextAttrAtom,
+  memoLengthAtom,
+  menuConfigAtom,
+  pickerCircleAtom,
+  useSetMemoImpossible,
+} from 'recoil/memo';
 import { colors } from 'styles/theme';
 import useIndexedDB, { tableEnum, indexing } from './useIndexedDB';
 import useRecoilImmerState from './useImmerState';
@@ -28,6 +35,7 @@ interface Memo {
 function useCanvasDrawing() {
   const isCanvasOpen = useRecoilValue(memoCanvasAtom).isCanvasOpen;
   const { mode } = useRecoilValue(menuConfigAtom);
+  const { selectedColor } = useRecoilValue(pickerCircleAtom);
   const isMobile = checkMobile();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasCtxRef = useRef<CanvasRenderingContext2D | null>(null);
@@ -73,11 +81,13 @@ function useCanvasDrawing() {
       }); //실행 순서가 중요하여 async를 이용한 then 체이닝 적용.
   };
   const applymemoContextAttr = () => {
-    const context = canvasCtxRef.current ?? {};
+    const context = canvasCtxRef.current;
 
     Object.entries(memoContextAttr).forEach(([key, value]) => {
       context[key] = value;
     });
+
+    context.strokeStyle = selectedColor;
   };
 
   const resetDrawingData = () => {
