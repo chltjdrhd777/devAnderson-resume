@@ -2,10 +2,9 @@ import { css } from '@emotion/react';
 import styled from '@emotion/styled';
 import { checkMobile } from 'helper/checkMobile';
 import useRecoilImmerState from 'hooks/useImmerState';
-import React, { DOMAttributes, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { memoContextAttrAtom, pickerCircleAtom } from 'recoil/memo';
-import { colors } from 'styles/theme';
 
 const ColorPicker = () => {
   const isMobile = checkMobile();
@@ -107,8 +106,7 @@ const ColorPicker = () => {
     }
   };
 
-  const handlePointerHeight = (event: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
-    const offsetY = event.nativeEvent.offsetY;
+  const handlePointerHeight = (offsetY: number) => {
     setPointerHeight(offsetY);
 
     handleRGBA({ offsetY }, colorBarCanvasCtx.current, (rgba) => {
@@ -134,10 +132,7 @@ const ColorPicker = () => {
     });
   };
 
-  const handlePickerCirclePostion = (event: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
-    const offsetX = event.nativeEvent.offsetX;
-    const offsetY = event.nativeEvent.offsetY;
-
+  const handlePickerCirclePostion = (offsetX: number, offsetY: number) => {
     handleRGBA({ offsetX, offsetY }, pickerCanvasCtx.current, (rgba) => {
       setPickerCircle((draft) => {
         draft.x = offsetX;
@@ -169,43 +164,36 @@ const ColorPicker = () => {
     });
   };
 
+  const calculatedOffset = (clientValue: number, minRect: number, maxRect: number) => {
+    let offset = 0;
+
+    if (minRect <= clientValue && clientValue <= maxRect) {
+      offset = clientValue - minRect;
+    } else if (maxRect < clientValue) {
+      offset = maxRect - minRect;
+    }
+
+    return offset;
+  };
+
   class ColorBarHandlers {
     // mouse에서는 캔버스 바깥에서의 움직임을 잡아내지 못하고 바로 leave로 빠지는 단점이 있어 UX에 좋지 않았다.
     // 따라서 윈도우의 이벤트리스너로 처리할 수 있도록 하였으며, 메서드를 객체로 통합 시 자가참조(this) 사용을 통한 내부 이벤트 해제가 필요하여 class를 사용하였다.
     static onMouseDown = (event: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
       if (isMobile) return;
       isColorBarPressedRef.current = true;
-      handlePointerHeight(event);
+      handlePointerHeight(event.nativeEvent.offsetY);
 
       window.addEventListener('mousemove', this.onMouseMove);
       window.addEventListener('mouseup', this.onMouseUp);
     };
 
     private static onMouseMove = (event: MouseEvent) => {
-      let offsetY = 0;
-
       const { top, bottom } = colorBarRect.current;
-
-      if (top <= event.clientY && event.clientY <= bottom) {
-        offsetY = event.clientY - top;
-      }
-
-      if (top > event.clientY) {
-        offsetY = 0;
-      }
-
-      if (bottom < event.clientY) {
-        offsetY = bottom - top;
-      }
+      let offsetY = calculatedOffset(event.clientY, top, bottom);
 
       if (isColorBarPressedRef.current) {
-        setPointerHeight(offsetY);
-        handleRGBA({ offsetY }, colorBarCanvasCtx.current, (rgba) => {
-          setMemoAttr((draft) => {
-            draft.pickerBackground = rgba;
-            return draft;
-          });
-        });
+        handlePointerHeight(offsetY);
       }
     };
 
@@ -239,40 +227,26 @@ const ColorPicker = () => {
     static onMouseDown = (event: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
       if (isMobile) return;
       isPickerCanvasPressedRef.current = true;
-      handlePickerCirclePostion(event);
+      handlePickerCirclePostion(event.nativeEvent.offsetX, event.nativeEvent.offsetY);
+
+      window.addEventListener('mousemove', this.onMouseMove);
+      window.addEventListener('mouseup', this.onMouseUp);
     };
 
-    private onMouseMove = (event: MouseEvent) => {
-      let offsetY = 0;
+    private static onMouseMove = (event: MouseEvent) => {
+      const { left, right, top, bottom } = pickerCanvasRect.current;
 
-      const { top, bottom } = colorBarRect.current;
+      let offsetX = calculatedOffset(event.clientX, left, right);
+      let offsetY = calculatedOffset(event.clientY, top, bottom);
 
-      if (top <= event.clientY && event.clientY <= bottom) {
-        offsetY = event.clientY - top;
-      }
-
-      if (top > event.clientY) {
-        offsetY = 0;
-      }
-
-      if (bottom < event.clientY) {
-        offsetY = bottom - top;
-      }
-
-      if (isColorBarPressedRef.current) {
-        setPointerHeight(offsetY);
-        handleRGBA({ offsetY }, colorBarCanvasCtx.current, (rgba) => {
-          setMemoAttr((draft) => {
-            draft.pickerBackground = rgba;
-            return draft;
-          });
-        });
+      if (isPickerCanvasPressedRef.current) {
+        handlePickerCirclePostion(offsetX, offsetY);
       }
     };
 
-    private onMouseUp = () => {
-      if (isColorBarPressedRef.current) {
-        isColorBarPressedRef.current = false;
+    private static onMouseUp = () => {
+      if (isPickerCanvasPressedRef.current) {
+        isPickerCanvasPressedRef.current = false;
         window.removeEventListener('mousemove', this.onMouseMove);
         window.removeEventListener('mouseup', this.onMouseUp);
       }

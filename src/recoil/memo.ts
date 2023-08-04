@@ -62,7 +62,7 @@ export const pickerCircleAtom = atom<PickerCircle>({
     y: 10,
     width: 7,
     height: 7,
-    selectedColor: 'rgba(255, 255, 255, 1)',
+    selectedColor: colors.black,
   },
 });
 
