@@ -200,18 +200,6 @@ const ColorPicker = () => {
     return offset;
   };
 
-  const calculatedOffset = (clientValue: number, minRect: number, maxRect: number) => {
-    let offset = 0;
-
-    if (minRect <= clientValue && clientValue <= maxRect) {
-      offset = clientValue - minRect;
-    } else if (maxRect < clientValue) {
-      offset = maxRect - minRect;
-    }
-
-    return offset;
-  };
-
   class ColorBarHandlers {
     // mouse에서는 캔버스 바깥에서의 움직임을 잡아내지 못하고 바로 leave로 빠지는 단점이 있어 UX에 좋지 않았다.
     // 따라서 윈도우의 이벤트리스너로 처리할 수 있도록 하였으며, 메서드를 객체로 통합 시 자가참조(this) 사용을 통한 내부 이벤트 해제가 필요하여 class를 사용하였다.
