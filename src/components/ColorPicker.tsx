@@ -51,23 +51,24 @@ const ColorPicker = () => {
     context.fillRect(0, 0, parentWidth, parentHeight);
   };
 
-  const initPickerCanvas = () => {
+  const initPickerCanvas = (rgba?: string) => {
     const pickerCanvas = pickerCanvasRef.current;
     const context = pickerCanvas.getContext('2d');
     const { parentWidth, parentHeight } = fitToPerent(pickerCanvas);
 
     const saturationGradient = context.createLinearGradient(0, 0, parentWidth, 0);
     saturationGradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-    saturationGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    saturationGradient.addColorStop(1, rgba ?? memoContextAttr.pickerBackground);
 
     const valueGradient = context.createLinearGradient(0, 0, 0, parentHeight);
-    valueGradient.addColorStop(0, 'rgba(0, 0, 0, 0)'); //transparent
-    valueGradient.addColorStop(1, 'rgba(0, 0, 0, 1)'); //black
+    valueGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    valueGradient.addColorStop(1, 'rgba(0, 0, 0, 1)');
 
     context.fillStyle = saturationGradient;
     context.fillRect(0, 0, parentWidth, parentHeight);
     context.fillStyle = valueGradient;
     context.fillRect(0, 0, parentWidth, parentHeight);
+    initSelectedColor();
   };
 
   const initPickerCircleCanvas = () => {
@@ -75,7 +76,20 @@ const ColorPicker = () => {
     fitToPerent(pickerCircleCanvas);
   };
 
-  const genPickerCircle = (offsetX?: number, offsetY?: number) => {
+  const initSelectedColor = () => {
+    const circleOffsetX = pickerCircle.x;
+    const circleOffsetY = pickerCircle.y;
+
+    handleRGBA({ offsetX: circleOffsetX, offsetY: circleOffsetY }, pickerCanvasCtx.current, (rgba) => {
+      setPickerCircle((draft) => {
+        draft.selectedColor = rgba;
+        return draft;
+      });
+    });
+  };
+
+  const genPickerCircle = (params: { offsetX?: number; offsetY?: number; initial?: boolean }) => {
+    const { offsetX, offsetY, initial } = params;
     const { clientWidth: parentWidth, clientHeight: parentHeight } = pickerCanvasRef.current.parentElement;
     const context = pickerCircleCanvasCtx.current;
     context.strokeStyle = 'black';
@@ -84,6 +98,10 @@ const ColorPicker = () => {
     context?.arc(offsetX ?? pickerCircle.x, offsetY ?? pickerCircle.y, pickerCircle.width, 0, Math.PI * 2);
     context?.stroke();
     context?.closePath();
+
+    if (initial) {
+      initSelectedColor();
+    }
   };
 
   const handleRGBA = (
@@ -100,6 +118,7 @@ const ColorPicker = () => {
         : context?.getImageData(0, offsetY, 1, 1).data;
 
       const rgba = `rgba(${pixelData[0]},${pixelData[1]},${pixelData[2]},${pixelData[3] / 255})`;
+
       if (rgba === 'rgba(0,0,0,0)') return;
 
       setter && setter(rgba);
@@ -114,6 +133,8 @@ const ColorPicker = () => {
         draft.pickerBackground = rgba;
         return draft;
       });
+
+      initPickerCanvas(rgba);
     });
   };
   const handlePointerHeightForMobile = (event: React.TouchEvent<HTMLCanvasElement>) => {
@@ -123,13 +144,16 @@ const ColorPicker = () => {
 
     if (0 <= offsetY && touch.clientY <= rect.bottom) {
       setPointerHeight(offsetY);
-    }
-    handleRGBA({ offsetY }, colorBarCanvasCtx.current, (rgba) => {
-      setMemoAttr((draft) => {
-        draft.pickerBackground = rgba;
-        return draft;
+
+      handleRGBA({ offsetY }, colorBarCanvasCtx.current, (rgba) => {
+        setMemoAttr((draft) => {
+          draft.pickerBackground = rgba;
+          return draft;
+        });
+
+        initPickerCanvas(rgba);
       });
-    });
+    }
   };
 
   const handlePickerCirclePostion = (offsetX: number, offsetY: number) => {
@@ -141,7 +165,7 @@ const ColorPicker = () => {
         return draft;
       });
 
-      genPickerCircle(offsetX, offsetY);
+      genPickerCircle({ offsetX, offsetY });
     });
   };
   const handlePickerCirclePostionForMobile = (event: React.TouchEvent<HTMLCanvasElement>) => {
@@ -150,8 +174,8 @@ const ColorPicker = () => {
     const offsetX = touch.clientX - rect.left;
     const offsetY = touch.clientY - rect.top;
 
-    handleRGBA({ offsetX, offsetY }, pickerCanvasCtx.current, (rgba) => {
-      if (0 <= offsetX && touch.clientX <= rect.right && 0 <= offsetY && touch.clientY <= rect.bottom) {
+    if (0 <= offsetX && touch.clientX <= rect.right && 0 <= offsetY && touch.clientY <= rect.bottom) {
+      handleRGBA({ offsetX, offsetY }, pickerCanvasCtx.current, (rgba) => {
         setPickerCircle((draft) => {
           draft.x = offsetX;
           draft.y = offsetY;
@@ -159,9 +183,21 @@ const ColorPicker = () => {
           return draft;
         });
 
-        genPickerCircle(offsetX, offsetY);
-      }
-    });
+        genPickerCircle({ offsetX, offsetY });
+      });
+    }
+  };
+
+  const calculatedOffset = (clientValue: number, minRect: number, maxRect: number) => {
+    let offset = 0;
+
+    if (minRect <= clientValue && clientValue <= maxRect) {
+      offset = clientValue - minRect;
+    } else if (maxRect < clientValue) {
+      offset = maxRect - minRect;
+    }
+
+    return offset;
   };
 
   const calculatedOffset = (clientValue: number, minRect: number, maxRect: number) => {
@@ -251,6 +287,23 @@ const ColorPicker = () => {
         window.removeEventListener('mouseup', this.onMouseUp);
       }
     };
+
+    static onTouchStart(event: React.TouchEvent<HTMLCanvasElement>) {
+      isColorBarPressedRef.current = true;
+      handlePickerCirclePostionForMobile(event);
+    }
+
+    static onTouchMove(event: React.TouchEvent<HTMLCanvasElement>) {
+      if (isColorBarPressedRef.current) {
+        handlePointerHeightForMobile(event);
+      }
+    }
+
+    static onTouchEnd() {
+      if (isColorBarPressedRef.current) {
+        isColorBarPressedRef.current = false;
+      }
+    }
   }
 
   const init = () => {
@@ -263,7 +316,7 @@ const ColorPicker = () => {
     pickerCircleCanvasCtx.current =
       pickerCircleCanvasRef.current?.getContext('2d', { willReadFrequently: true }) ?? null;
 
-    genPickerCircle();
+    genPickerCircle({ initial: true });
   };
 
   useEffect(() => {
@@ -287,8 +340,15 @@ const ColorPicker = () => {
 
   return (
     <Wrapper>
-      <PickerCanvasFrame background={memoContextAttr.pickerBackground}>
-        <PickerCircleCanvas ref={pickerCircleCanvasRef} onMouseDown={PickerCircleCanvasHandlers.onMouseDown} />
+      <PickerCanvasFrame>
+        <PickerCircleCanvas
+          ref={pickerCircleCanvasRef}
+          onMouseDown={PickerCircleCanvasHandlers.onMouseDown}
+          onTouchStart={PickerCircleCanvasHandlers.onTouchStart}
+          onTouchMove={PickerCircleCanvasHandlers.onTouchMove}
+          onTouchEnd={PickerCircleCanvasHandlers.onTouchEnd}
+          onTouchCancel={PickerCircleCanvasHandlers.onTouchEnd}
+        />
         <PickerCanvas ref={pickerCanvasRef} />
       </PickerCanvasFrame>
 
@@ -306,6 +366,8 @@ const ColorPicker = () => {
           onTouchCancel={ColorBarHandlers.onTouchEnd}
         />
       </ColorBarCanvasFrame>
+
+      <SelectedColor background={pickerCircle.selectedColor} />
     </Wrapper>
   );
 };
@@ -315,11 +377,10 @@ const Wrapper = styled.div`
   height: 12rem;
 `;
 
-const PickerCanvasFrame = styled.div<{ background: string }>`
+const PickerCanvasFrame = styled.div`
   width: 12rem;
   height: 100%;
   margin-right: 1rem;
-  background: ${({ background }) => background};
   position: relative;
 `;
 
@@ -380,5 +441,11 @@ const Pointer = ({ direction }: { direction: 'left' | 'right' }) => {
     </PointerSVG>
   );
 };
+
+const SelectedColor = styled.div<{ background: string }>`
+  width: 3.5rem;
+  height: 3.5rem;
+  background-color: ${({ background }) => background};
+`;
 
 export default ColorPicker;
