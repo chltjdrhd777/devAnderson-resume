@@ -17,6 +17,7 @@ import useIndexedDB, { tableEnum, indexing } from './useIndexedDB';
 import useRecoilImmerState from './useImmerState';
 import { convertImageDataToURL } from 'helper/convertImageDataToURL';
 import useDrawPathRef from './useDrawPathRef';
+import { genMergedImageData } from 'helper/genMergedImageData';
 
 // Ref로 값을 관리하면
 // <Pros>
@@ -46,6 +47,7 @@ function useCanvasDrawing() {
     height: 0,
   });
   const memorizedImageData = useRef<ImageData[]>([]);
+  const mergedDataURL = useRef<string | null>(null);
 
   const [drawPathLength, setDrawPathLength] = useRecoilImmerState(memoLengthAtom);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -66,9 +68,19 @@ function useCanvasDrawing() {
     // 이전까지 그리던 사이즈보다 작은 사이즈에서 그리게 될 경우
     // drawPathRef에 기록되는 가장 마지막의 기록 = 최대사이즈 스냅샷이므로 이것만 저장하여 최종 저장 데이터 용량 최적화
     // 해당 최적화가 없을 경우, 모든 그려진 drawPath에 대해서 redraw하게되므로 수정한다.
+
     if (newImageWidth < memorizedPrevWidth || newIamgeHeight < memorizedPrevHeight) {
       const lastDrawPath = drawPathRef.current[drawPathRef.current.length - 1];
       memorizedImageData.current.push(lastDrawPath);
+
+      // 추가 최적화
+      // 가능성은 적지만, 누군가가 웹사이트에서 메모기능을 쓸 때 화면 크기를 반복적으로 줄였다 늘였다를 반복하며 그릴 경우
+      // memorized되는 케이스가 점점 늘어나게 된다 => 저장할 때 오버헤드가 발생할 수 있다.
+      // 따라서, 계속 지속적으로 memorized 되는 이미지의 갯수가 늘어나기 보다, memorized 되어있는 배열에서 최대 사이즈의 캔버스를 만들고, 모든 메모를 apply하여 하나의 이미지 데이터만 보유한다.
+      // 해당 작업은 항상 2개의 캔버스에 대해서만 발생할 것이기 때문에, 비교적 부담이 적다.
+      const { mergedImageData, dataURL } = genMergedImageData(memorizedImageData.current);
+      memorizedImageData.current = [mergedImageData];
+      mergedDataURL.current = dataURL;
     }
   };
 
@@ -165,7 +177,11 @@ function useCanvasDrawing() {
 
     // indexedDB
     const saveDataUrlToIndexedDb = () => {
-      const dataUrlList = [canvas.toDataURL(), ...convertImageDataToURL(memorizedImageData.current)];
+      const dataUrlList = [canvas.toDataURL()];
+
+      if (mergedDataURL.current !== null) {
+        dataUrlList.push(mergedDataURL.current);
+      }
 
       const saveData = {
         snapshot: 'recently saved image dataUrl',
