@@ -277,19 +277,19 @@ const ColorPicker = () => {
     };
 
     static onTouchStart(event: React.TouchEvent<HTMLCanvasElement>) {
-      isColorBarPressedRef.current = true;
+      isPickerCanvasPressedRef.current = true;
       handlePickerCirclePostionForMobile(event);
     }
 
     static onTouchMove(event: React.TouchEvent<HTMLCanvasElement>) {
-      if (isColorBarPressedRef.current) {
-        handlePointerHeightForMobile(event);
+      if (isPickerCanvasPressedRef.current) {
+        handlePickerCirclePostionForMobile(event);
       }
     }
 
     static onTouchEnd() {
-      if (isColorBarPressedRef.current) {
-        isColorBarPressedRef.current = false;
+      if (isPickerCanvasPressedRef.current) {
+        isPickerCanvasPressedRef.current = false;
       }
     }
   }

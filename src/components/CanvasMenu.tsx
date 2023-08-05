@@ -14,11 +14,9 @@ function CanvasMenu() {
     <Container isCanvasOpen={isCanvasOpen}>
       <MenuBtn className={menuOpen && 'active'} onClick={() => setMenuOpen((prev) => !prev)} />
 
-      {menuOpen && (
-        <MenuBox>
-          <ColorPicker />
-        </MenuBox>
-      )}
+      <MenuBox menuOpen={menuOpen}>
+        <ColorPicker />
+      </MenuBox>
     </Container>
   );
 }
@@ -36,6 +34,14 @@ const Container = styled.div<{ isCanvasOpen: boolean }>`
   visibility: ${({ isCanvasOpen }) => (isCanvasOpen ? 'visible' : 'hidden')};
 `;
 
-const MenuBox = styled.div``;
+const MenuBox = styled.div<{ menuOpen: boolean }>`
+  z-index: calc(var(--zIndex-2st) * -1);
+  ${({ menuOpen }) =>
+    menuOpen &&
+    css`
+      z-index: calc(var(--zIndex-2st));
+      opacity: 1;
+    `}
+`;
 
 export default CanvasMenu;
