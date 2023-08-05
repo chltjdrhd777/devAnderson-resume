@@ -12,7 +12,6 @@ import {
   pickerCircleAtom,
   useSetMemoImpossible,
 } from 'recoil/memo';
-import { colors } from 'styles/theme';
 import useIndexedDB, { tableEnum, indexing } from './useIndexedDB';
 import useRecoilImmerState from './useImmerState';
 import { convertImageDataToURL } from 'helper/convertImageDataToURL';
@@ -70,15 +69,15 @@ function useCanvasDrawing() {
     // 해당 최적화가 없을 경우, 모든 그려진 drawPath에 대해서 redraw하게되므로 수정한다.
 
     if (newImageWidth < memorizedPrevWidth || newIamgeHeight < memorizedPrevHeight) {
-      const lastDrawPath = drawPathRef.current[drawPathRef.current.length - 1];
+      const lastDrawPath = drawPathRef.current[drawPathRef.current.length - 1]; //반응형 전 최대크기 스냅샷
       memorizedImageData.current.push(lastDrawPath);
 
       // 추가 최적화
       // 가능성은 적지만, 누군가가 웹사이트에서 메모기능을 쓸 때 화면 크기를 반복적으로 줄였다 늘였다를 반복하며 그릴 경우
       // memorized되는 케이스가 점점 늘어나게 된다 => 저장할 때 오버헤드가 발생할 수 있다.
-      // 따라서, 계속 지속적으로 memorized 되는 이미지의 갯수가 늘어나기 보다, memorized 되어있는 배열에서 최대 사이즈의 캔버스를 만들고, 모든 메모를 apply하여 하나의 이미지 데이터만 보유한다.
-      // 해당 작업은 항상 2개의 캔버스에 대해서만 발생할 것이기 때문에, 비교적 부담이 적다.
-      const { mergedImageData, dataURL } = genMergedImageData(memorizedImageData.current);
+      // 따라서, 계속 지속적으로 memorized 되는 이미지의 갯수가 늘어나기 보다, memorized 되어있는 배열에서 최대 사이즈의 캔버스를 만들고, 메모를 병합하여 하나의 메모만 관리한다.
+      // 해당 작업은 반응형이 발생하는 순간에 항상 2개의 캔버스에 대해서만 발생할 것이기 때문에, 비교적 부담이 적다.(현재이미지, 기존 최대크기 이미지)
+      const { mergedImageData, dataURL } = genMergedImageData([imageData, lastDrawPath]);
       memorizedImageData.current = [mergedImageData];
       mergedDataURL.current = dataURL;
     }
@@ -176,12 +175,20 @@ function useCanvasDrawing() {
     updateDrawPathRef(imageData);
 
     // indexedDB
-    const saveDataUrlToIndexedDb = () => {
-      const dataUrlList = [canvas.toDataURL()];
+    const saveDataUrlToIndexedDb = (canvas: HTMLCanvasElement) => {
+      const genDataList = () => {
+        const baseList = [];
 
-      if (mergedDataURL.current !== null) {
-        dataUrlList.push(mergedDataURL.current);
-      }
+        if (mergedDataURL.current) {
+          baseList.push(mergedDataURL.current);
+        }
+        baseList.push(canvas.toDataURL());
+
+        console.log('merged 있었니', mergedDataURL.current, 'base 결과', baseList);
+        return baseList;
+      };
+
+      const dataUrlList = genDataList();
 
       const saveData = {
         snapshot: 'recently saved image dataUrl',
@@ -190,7 +197,7 @@ function useCanvasDrawing() {
       saveTransaction(tableEnum.memo, saveData, 'put', useSetMemoImpossible);
     };
 
-    saveDataUrlToIndexedDb();
+    saveDataUrlToIndexedDb(canvas);
   };
 
   //! mobile device(phone or tablet) handler
@@ -246,15 +253,9 @@ function useCanvasDrawing() {
     const context = canvasCtxRef.current;
     context?.clearRect(0, 0, canvas.width, canvas.height);
 
-    const lastDrawPath = drawPathRef.current[drawPathRef.current.length - 1];
-
-    if (lastDrawPath) {
-      const redrawTarget = [lastDrawPath, ...memorizedImageData.current];
-
-      redrawTarget.forEach((imageData) => {
-        context?.putImageData(imageData, 0, 0);
-      });
-    }
+    drawPathRef.current.forEach((imageData) => {
+      context?.putImageData(imageData, 0, 0);
+    });
   };
 
   useEffect(() => {
