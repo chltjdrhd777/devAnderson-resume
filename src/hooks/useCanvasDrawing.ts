@@ -34,7 +34,7 @@ interface Memo {
 
 function useCanvasDrawing() {
   const isCanvasOpen = useRecoilValue(memoCanvasAtom).isCanvasOpen;
-  const { mode } = useRecoilValue(menuConfigAtom);
+  const { drawType, penSize } = useRecoilValue(menuConfigAtom);
   const { selectedColor } = useRecoilValue(pickerCircleAtom);
   const isMobile = checkMobile();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -184,7 +184,6 @@ function useCanvasDrawing() {
         }
         baseList.push(canvas.toDataURL());
 
-        console.log('merged 있었니', mergedDataURL.current, 'base 결과', baseList);
         return baseList;
       };
 
@@ -202,7 +201,7 @@ function useCanvasDrawing() {
 
   //! mobile device(phone or tablet) handler
   const checkPointerType = (pointerType: 'mouse' | 'touch' | 'pen', callback: Function) => {
-    if (pointerType === mode) {
+    if (pointerType === drawType) {
       callback();
     }
   };
@@ -224,6 +223,7 @@ function useCanvasDrawing() {
         const context = canvasCtxRef.current;
         const x = e.pageX;
         const y = e.pageY;
+
         applymemoContextAttr();
 
         context?.lineTo(x, y);

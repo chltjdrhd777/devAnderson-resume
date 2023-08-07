@@ -8,6 +8,7 @@ import CanvasMenu from './CanvasMenu';
 import { useRecoilValue } from 'recoil';
 import { menuConfigAtom } from 'recoil/memo';
 import { checkMobile } from 'helper/checkMobile';
+import preventCanvasDefault from 'helper/preventCanvasDefault';
 
 function MemoCanvas() {
   // todo 텍스트 넣기 기능 추가
@@ -19,7 +20,7 @@ function MemoCanvas() {
 
   const isMobile = checkMobile();
   const memo = useSelector((state) => state.user.memo); //사용자별 영속성이어야 하기에 Redux-persist로 로컬관리
-  const { mode } = useRecoilValue(menuConfigAtom);
+  const { drawType } = useRecoilValue(menuConfigAtom);
 
   const {
     isCanvasOpen,
@@ -36,7 +37,7 @@ function MemoCanvas() {
 
   const isMemoShown = (memo.isMemoShown && drawPathLength !== 0) || isCanvasOpen;
   const canvasAttrs = {
-    onMouseDown: isMobile && mode === 'pen' ? (e) => e.preventDefault() : startDrawing, //pen 이벤트는 마우스 이벤트를 공유하기에, 조건을 걸어서 시작을 막아야 함.
+    onMouseDown: isMobile && drawType === 'pen' ? (e) => e.preventDefault() : startDrawing, //pen 이벤트는 마우스 이벤트를 공유하기에, 조건을 걸어서 시작을 막아야 함.
     onMouseMove: onDrawing,
     onMouseUp: stopDrawing,
     onMouseLeave: onMouseLeave,
@@ -46,8 +47,8 @@ function MemoCanvas() {
   } as CanvasHTMLAttributes<HTMLCanvasElement>;
 
   useLayoutEffect(() => {
-    canvasRef.current.addEventListener('contextmenu', (e) => e.preventDefault(), { passive: false }); // 우클릭 막기
-    canvasRef.current.addEventListener('dblclick', (e) => e.preventDefault(), { passive: false }); // 더클블릭 막기
+    preventCanvasDefault(canvasRef.current, 'contextmenu'); // 우클릭 막기
+    preventCanvasDefault(canvasRef.current, 'dblclick'); // 더클블릭 막기
   }, []);
 
   return (
