@@ -99,6 +99,7 @@ function useCanvasDrawing() {
     });
 
     context.strokeStyle = selectedColor;
+    context.lineWidth = penSize;
   };
 
   const resetDrawingData = () => {

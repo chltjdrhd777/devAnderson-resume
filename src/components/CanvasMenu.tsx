@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import MenuBtn from './Button/MenuBtn';
 import styled from '@emotion/styled';
 import { css } from '@emotion/react';
@@ -10,11 +10,22 @@ import { GoPencil } from 'react-icons/go';
 import { colors } from 'styles/theme';
 import { useSelector } from 'redux/store';
 import useRecoilImmerState from 'hooks/useImmerState';
+import { debounce } from 'helper/debounce';
 
 function CanvasMenu() {
   const { isCanvasOpen } = useRecoilValue(memoCanvasAtom);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuConfig, setMenuConfig] = useRecoilImmerState(menuConfigAtom);
+
+  useEffect(() => {
+    console.log(menuConfig.penSize);
+  });
+  const onChangePensize = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMenuConfig((draft) => {
+      draft.penSize = +e.target.value;
+      return draft;
+    });
+  };
 
   return (
     <Container isCanvasOpen={isCanvasOpen}>
@@ -24,7 +35,15 @@ function CanvasMenu() {
         <ColorPicker />
 
         <Configs>
-          <MenuConfigSlider SliderIcon={GoPencil} labelText="펜 크기" />
+          <MenuConfigSlider
+            SliderIcon={GoPencil}
+            labelText="펜 크기"
+            min={1}
+            max={5}
+            value={menuConfig.penSize}
+            onChange={onChangePensize}
+            step={0.0001}
+          />
         </Configs>
       </MenuBox>
     </Container>

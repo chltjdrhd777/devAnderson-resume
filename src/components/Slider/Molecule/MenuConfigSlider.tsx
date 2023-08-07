@@ -1,20 +1,22 @@
-import React from 'react';
+import React, { InputHTMLAttributes } from 'react';
 import { BaseSlider } from '../Atom/menuSlider';
 import styled from '@emotion/styled';
 import { MoleculeProps } from 'types';
 import { IconType } from 'react-icons';
 import { colors } from 'styles/theme';
+import { SerializedStyles } from '@emotion/react';
 
 interface MenuConfigRangeProps {
   SliderIcon: IconType | ((...args: any) => JSX.Element);
   labelText: string;
+  additialCSS?: SerializedStyles;
 }
 function MenuConfigSlider({
   SliderIcon,
   labelText,
   additialCSS,
   ...props
-}: MenuConfigRangeProps & MoleculeProps<HTMLInputElement>) {
+}: MenuConfigRangeProps & InputHTMLAttributes<HTMLInputElement>) {
   return (
     <Wrapper>
       <Label>{labelText}</Label>

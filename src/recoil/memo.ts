@@ -40,7 +40,7 @@ export const memoContextAttrAtom = atom<Partial<CanvasRenderingContext2D>>({
   key: 'memoContextAttrAtom',
   default: {
     strokeStyle: colors.black,
-    lineWidth: 2,
+    lineWidth: 1,
     lineCap: 'round',
     lineJoin: 'round',
   },
@@ -51,8 +51,8 @@ export const menuConfigAtom = atom<MenuConfigAtom>({
   default: {
     pickerBackground: 'rgba(255, 0, 0, 1)',
     tool: 'pen',
-    penSize: 2,
-    eraserSize: 2,
+    penSize: 1,
+    eraserSize: 1,
     drawType: 'touch',
     pressure: false,
   },
