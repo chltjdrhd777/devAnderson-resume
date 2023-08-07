@@ -48,7 +48,6 @@ function MemoCanvas() {
   useLayoutEffect(() => {
     canvasRef.current.addEventListener('contextmenu', (e) => e.preventDefault(), { passive: false }); // 우클릭 막기
     canvasRef.current.addEventListener('dblclick', (e) => e.preventDefault(), { passive: false }); // 더클블릭 막기
-    canvasRef.current.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false }); // 터치 이벤트 시작점 막기(어차피 pointer에서 터치 처리중이고, 막아놔야 더블터치 이벤트 감지 막을 수 있다.)
   }, []);
 
   return (
