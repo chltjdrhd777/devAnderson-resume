@@ -2,17 +2,22 @@ import useRecoilImmerState from 'hooks/useImmerState';
 import { atom } from 'recoil';
 import { colors } from 'styles/theme';
 
+// type
 export interface memoCanvasAtom {
   isCanvasOpen: boolean;
   canSaveMemo: boolean;
 }
 
 export interface MenuConfigAtom {
-  tool: 'pen' | 'ereaser';
-  mode: 'pen' | 'touch';
-  pressure: boolean;
+  pickerBackground: string;
+  tool: 'pen' | 'eraser'; //현재 사용되는 도구
+  penSize: number;
+  eraserSize: number;
+  drawType: 'pen' | 'touch'; // (기본 마우스) 펜 모드 or 터치모드
+  pressure: boolean; // 필압 지원유무
 }
 
+// atom
 export const memoCanvasAtom = atom<memoCanvasAtom>({
   key: 'memoCanvasAtom',
   default: {
@@ -31,20 +36,25 @@ export const memoLimitAtom = atom<number>({
   default: 30,
 });
 
-export const memoContextAttrAtom = atom<
-  Partial<
-    CanvasRenderingContext2D & {
-      pickerBackground: string;
-    }
-  >
->({
+export const memoContextAttrAtom = atom<Partial<CanvasRenderingContext2D>>({
   key: 'memoContextAttrAtom',
   default: {
-    pickerBackground: 'rgba(255, 0, 0, 1)',
     strokeStyle: colors.black,
     lineWidth: 2,
     lineCap: 'round',
     lineJoin: 'round',
+  },
+});
+
+export const menuConfigAtom = atom<MenuConfigAtom>({
+  key: 'menuConfigAtom',
+  default: {
+    pickerBackground: 'rgba(255, 0, 0, 1)',
+    tool: 'pen',
+    penSize: 2,
+    eraserSize: 2,
+    drawType: 'touch',
+    pressure: false,
   },
 });
 
@@ -63,15 +73,6 @@ export const pickerCircleAtom = atom<PickerCircle>({
     width: 7,
     height: 7,
     selectedColor: colors.black,
-  },
-});
-
-export const menuConfigAtom = atom<MenuConfigAtom>({
-  key: 'menuConfigAtom',
-  default: {
-    tool: 'pen',
-    mode: 'pen',
-    pressure: false,
   },
 });
 

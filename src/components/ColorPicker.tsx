@@ -1,11 +1,12 @@
 import { css } from '@emotion/react';
 import styled from '@emotion/styled';
 import { checkMobile } from 'helper/checkMobile';
+import preventCanvasDefault from 'helper/preventCanvasDefault';
 import useRecoilImmerState from 'hooks/useImmerState';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { memoContextAttrAtom, pickerCircleAtom } from 'recoil/memo';
-import { CustomEventListner } from 'types';
+import { menuConfigAtom, pickerCircleAtom } from 'recoil/memo';
+import { colors } from 'styles/theme';
 
 const ColorPicker = () => {
   const isMobile = checkMobile();
@@ -20,7 +21,7 @@ const ColorPicker = () => {
   const isColorBarPressedRef = useRef(false);
   const isPickerCanvasPressedRef = useRef(false);
 
-  const [memoContextAttr, setMemoAttr] = useRecoilImmerState(memoContextAttrAtom);
+  const [menuConfig, setMenuConfig] = useRecoilImmerState(menuConfigAtom);
   const [pickerCircle, setPickerCircle] = useRecoilImmerState(pickerCircleAtom);
   const [pointerHeight, setPointerHeight] = useState(0);
 
@@ -59,7 +60,7 @@ const ColorPicker = () => {
 
     const saturationGradient = context.createLinearGradient(0, 0, parentWidth, 0);
     saturationGradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-    saturationGradient.addColorStop(1, rgba ?? memoContextAttr.pickerBackground);
+    saturationGradient.addColorStop(1, rgba ?? menuConfig.pickerBackground);
 
     const valueGradient = context.createLinearGradient(0, 0, 0, parentHeight);
     valueGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
@@ -130,7 +131,7 @@ const ColorPicker = () => {
     setPointerHeight(offsetY);
 
     handleRGBA({ offsetY }, colorBarCanvasCtx.current, (rgba) => {
-      setMemoAttr((draft) => {
+      setMenuConfig((draft) => {
         draft.pickerBackground = rgba;
         return draft;
       });
@@ -147,7 +148,7 @@ const ColorPicker = () => {
       setPointerHeight(offsetY);
 
       handleRGBA({ offsetY }, colorBarCanvasCtx.current, (rgba) => {
-        setMemoAttr((draft) => {
+        setMenuConfig((draft) => {
           draft.pickerBackground = rgba;
           return draft;
         });
@@ -328,16 +329,8 @@ const ColorPicker = () => {
   }, []);
 
   useEffect(() => {
-    const listener = (e: any) => {
-      e.preventDefault();
-      ColorBarHandlers.onTouchMove(e);
-    };
-    colorBarCanvasRef.current.addEventListener('touchmove', listener, { passive: false });
-
-    return () => {
-      const removeEventListener = colorBarCanvasRef.current.removeEventListener as CustomEventListner;
-      removeEventListener('touchmove', listener, { passive: false });
-    };
+    // 터치 스크롤 막는 로직
+    preventCanvasDefault(colorBarCanvasRef.current, 'touchmove');
   }, []);
 
   return (
@@ -376,11 +369,13 @@ const ColorPicker = () => {
 
 const Wrapper = styled.div`
   display: flex;
+  justify-content: center;
   height: 12rem;
+  position: relative;
 `;
 
 const PickerCanvasFrame = styled.div`
-  width: 12rem;
+  width: 13rem;
   height: 100%;
   margin-right: 1rem;
   position: relative;
@@ -445,9 +440,15 @@ const Pointer = ({ direction }: { direction: 'left' | 'right' }) => {
 };
 
 const SelectedColor = styled.div<{ background: string }>`
-  width: 3.5rem;
-  height: 3.5rem;
+  width: 2.7rem;
+  height: 2.7rem;
+  border: 1px solid ${colors.black};
+  border-radius: 100%;
   background-color: ${({ background }) => background};
+
+  position: absolute;
+  bottom: -5rem;
+  left: -0.5rem;
 `;
 
 export default ColorPicker;
