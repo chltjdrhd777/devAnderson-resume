@@ -5,6 +5,7 @@ import useRecoilImmerState from 'hooks/useImmerState';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { memoContextAttrAtom, pickerCircleAtom } from 'recoil/memo';
+import { CustomEventListner } from 'types';
 
 const ColorPicker = () => {
   const isMobile = checkMobile();
@@ -323,6 +324,19 @@ const ColorPicker = () => {
     window.addEventListener('resize', updateRects);
     return () => {
       window.removeEventListener('resize', updateRects);
+    };
+  }, []);
+
+  useEffect(() => {
+    const listener = (e: any) => {
+      e.preventDefault();
+      ColorBarHandlers.onTouchMove(e);
+    };
+    colorBarCanvasRef.current.addEventListener('touchmove', listener, { passive: false });
+
+    return () => {
+      const removeEventListener = colorBarCanvasRef.current.removeEventListener as CustomEventListner;
+      removeEventListener('touchmove', listener, { passive: false });
     };
   }, []);
 
