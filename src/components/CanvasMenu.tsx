@@ -8,7 +8,7 @@ import { memoCanvasAtom, menuConfigAtom } from 'recoil/memo';
 import MenuToolSizeSlider from './Slider/Molecule/MenuToolSize';
 import { GoPencil } from 'react-icons/go';
 import { BsFillEraserFill } from 'react-icons/bs';
-import { colors } from 'styles/theme';
+import { colors, genMedia } from 'styles/theme';
 import useRecoilImmerState from 'hooks/useImmerState';
 
 function CanvasMenu() {
@@ -32,39 +32,41 @@ function CanvasMenu() {
   };
 
   return (
-    <Container isCanvasOpen={isCanvasOpen}>
+    <Container isCanvasOpen={isCanvasOpen} menuOpen={menuOpen}>
       <MenuBtn className={menuOpen && 'active'} onClick={() => setMenuOpen((prev) => !prev)} />
 
-      <MenuBox menuOpen={menuOpen}>
-        <ColorPicker />
+      <MenuBoxWrapper>
+        <MenuBox menuOpen={menuOpen}>
+          <ColorPicker />
 
-        <Configs>
-          <MenuToolSizeSlider
-            SliderIcon={GoPencil}
-            labelText="펜 크기"
-            min={1}
-            max={5}
-            value={menuConfig.penSize}
-            onChange={(e) => onChangeSize(e, 'pen')}
-            step={0.0001}
-          />
+          <Configs>
+            <MenuToolSizeSlider
+              SliderIcon={GoPencil}
+              labelText="펜 크기"
+              min={1}
+              max={5}
+              value={menuConfig.penSize}
+              onChange={(e) => onChangeSize(e, 'pen')}
+              step={0.0001}
+            />
 
-          <MenuToolSizeSlider
-            SliderIcon={BsFillEraserFill}
-            labelText="지우개 크기"
-            min={1}
-            max={5}
-            value={menuConfig.eraserSize}
-            onChange={(e) => onChangeSize(e, 'eraser')}
-            step={0.0001}
-          />
-        </Configs>
-      </MenuBox>
+            <MenuToolSizeSlider
+              SliderIcon={BsFillEraserFill}
+              labelText="지우개 크기"
+              min={1}
+              max={5}
+              value={menuConfig.eraserSize}
+              onChange={(e) => onChangeSize(e, 'eraser')}
+              step={0.0001}
+            />
+          </Configs>
+        </MenuBox>
+      </MenuBoxWrapper>
     </Container>
   );
 }
 
-const Container = styled.div<{ isCanvasOpen: boolean }>`
+const Container = styled.div<{ isCanvasOpen: boolean; menuOpen: boolean }>`
   position: fixed;
   top: calc(var(--header-height) + 1rem);
   right: var(--option-btn-right);
@@ -75,8 +77,12 @@ const Container = styled.div<{ isCanvasOpen: boolean }>`
   transition: opacity 0.1s ease-in, visibility 0.1s ease-in;
   opacity: ${({ isCanvasOpen }) => (isCanvasOpen ? 1 : 0)};
   visibility: ${({ isCanvasOpen }) => (isCanvasOpen ? 'visible' : 'hidden')};
+  z-index: var(--zIndex-1st);
 `;
 
+const MenuBoxWrapper = styled.div`
+  position: relative;
+`;
 const MenuBox = styled.div<{ menuOpen: boolean }>`
   visibility: hidden;
   opacity: 0;
@@ -86,6 +92,10 @@ const MenuBox = styled.div<{ menuOpen: boolean }>`
   border-radius: 1rem;
   min-width: 20rem;
   width: 20rem;
+  padding: 2rem;
+  position: absolute;
+  top: 0;
+  right: 0;
 
   ${({ menuOpen }) =>
     menuOpen &&
@@ -94,8 +104,13 @@ const MenuBox = styled.div<{ menuOpen: boolean }>`
       opacity: 1;
     `}
 
-  padding: 2rem;
-  margin-top: 0.5rem;
+  margin-top: 1rem;
+  ${genMedia(
+    'web(1024px)',
+    css`
+      margin-top: 1.5rem;
+    `,
+  )}
 `;
 
 const Configs = styled.div`
