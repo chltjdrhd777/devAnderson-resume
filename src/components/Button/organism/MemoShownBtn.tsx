@@ -1,5 +1,5 @@
 import React from 'react';
-import Option from './Molecule/Option';
+import Option from '../Molecule/Option';
 import { AiOutlineEye, AiFillEye } from 'react-icons/ai';
 import { actions, useDispatch, useSelector } from 'redux/store';
 import { useRecoilValue } from 'recoil';
@@ -18,28 +18,16 @@ function MemoShownBtn() {
   };
 
   return (
-    <Option additialCSS={additonalCSS(isCanvasOpen)} onClick={onOptionClick}>
+    <Option additialCSS={additonalCSS(isMemoShown)} onClick={onOptionClick}>
       {isMemoShown ? <AiFillEye /> : <AiOutlineEye />}
     </Option>
   );
 }
 
-const additonalCSS = (isCanvasOpen: boolean) =>
-  isCanvasOpen &&
+const additonalCSS = (isMemoShown: boolean) =>
+  isMemoShown &&
   css`
-    &:hover {
-      transform: scale(0.85);
-      opacity: 0.5;
-    }
-
-    ${genMedia(
-      'web(1024px)',
-      css`
-        &:hover {
-          transform: scale(1.1);
-        }
-      `,
-    )}
+    opacity: 1;
   `;
 
 export default MemoShownBtn;

@@ -1,7 +1,6 @@
 import React from 'react';
 import styled from '@emotion/styled';
-import { css } from '@emotion/react';
-import { animations, colors } from 'styles/theme';
+import { animations } from 'styles/theme';
 
 interface Props {
   txt: string | JSX.Element;

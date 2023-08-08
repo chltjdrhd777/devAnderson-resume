@@ -447,7 +447,7 @@ const SelectedColor = styled.div<{ background: string }>`
   background-color: ${({ background }) => background};
 
   position: absolute;
-  bottom: -5rem;
+  bottom: -5.2rem;
   left: -0.5rem;
 `;
 

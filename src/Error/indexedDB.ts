@@ -12,6 +12,7 @@ Object.freeze(errorNameEnum);
 type ErrorName = (typeof errorNameEnum)[keyof typeof errorNameEnum];
 type ErrorCase = BaseErrorCase<ErrorName>;
 const errorCase: ErrorCase = (err) => {
+  // 현재는 콘솔만 달라지게 하였지만, 필요시 에러 발생에 대한 핸들링 로직을 더해줄 수도 있다.
   if (err.name === 'transactionError') {
     console.error(`${err.name} 이 발생했습니다`, err);
   }

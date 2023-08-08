@@ -3,7 +3,7 @@ import styled from '@emotion/styled';
 import { GrInProgress as TimerIcon, GrDocumentDownload as DownloadIcon } from 'react-icons/gr';
 import { colors, genMedia } from 'styles/theme';
 import { useProcess } from 'hooks/useProcess';
-import RoundLoading from 'components/Loading/Round';
+import RoundLoading from 'components/Button/Molecule/RoundLoading';
 import useScrollAnimation from 'hooks/useScrollAnimation';
 import { css } from '@emotion/react';
 

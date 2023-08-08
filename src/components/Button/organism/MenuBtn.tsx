@@ -1,6 +1,6 @@
 import styled from '@emotion/styled';
 import React, { HTMLAttributes } from 'react';
-import Option from './Molecule/Option';
+import Option from '../Molecule/Option';
 import { BiMenu } from 'react-icons/bi';
 import { css } from '@emotion/react';
 import { genMedia } from 'styles/theme';

@@ -10,7 +10,7 @@ export interface memoCanvasAtom {
 
 export interface MenuConfigAtom {
   pickerBackground: string;
-  tool: 'pen' | 'eraser'; //현재 사용되는 도구
+  currentTool: 'pen' | 'eraser';
   penSize: number;
   eraserSize: number;
   drawType: 'pen' | 'touch'; // (기본 마우스) 펜 모드 or 터치모드
@@ -50,7 +50,7 @@ export const menuConfigAtom = atom<MenuConfigAtom>({
   key: 'menuConfigAtom',
   default: {
     pickerBackground: 'rgba(255, 0, 0, 1)',
-    tool: 'pen',
+    currentTool: 'pen',
     penSize: 1,
     eraserSize: 1,
     drawType: 'touch',

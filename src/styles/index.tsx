@@ -7,13 +7,13 @@ import dynamic from 'next/dynamic';
 const ModalPortal = dynamic(() => import('components/ModalPortal'), {
   ssr: false,
 });
-import PdfBtn from 'components/Button/PdfBtn';
+import PdfBtn from 'components/Button/organism/PdfBtn';
 import Content from 'components/Content';
 import GradientHeader from 'components/GradientHeader';
 import { css } from '@emotion/react';
 import MemoCanvas from 'components/MemoCanvas';
 import OpenCanvasBtn from 'components/Button/OpenCanvasBtn';
-import MemoShownBtn from 'components/Button/MemoShownBtn';
+import MemoShownBtn from 'components/Button/organism/MemoShownBtn';
 
 const IndexPage: NextPage = () => {
   return (
