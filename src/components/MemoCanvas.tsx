@@ -1,5 +1,3 @@
-import { css } from '@emotion/react';
-import styled from '@emotion/styled';
 import React, { CanvasHTMLAttributes, useLayoutEffect } from 'react';
 
 import useCanvasDrawing from 'hooks/useCanvasDrawing';
@@ -9,6 +7,8 @@ import { useRecoilValue } from 'recoil';
 import { menuConfigAtom } from 'recoil/memo';
 import { checkMobile } from 'helper/checkMobile';
 import preventCanvasDefault from 'helper/preventCanvasDefault';
+import EraserCanvas from './EraserCanvas';
+import { Canvas, CanvasFrame } from './Canvas/Atom/BaseCanvas';
 
 function MemoCanvas() {
   // todo 텍스트 넣기 기능 추가
@@ -52,33 +52,15 @@ function MemoCanvas() {
   }, []);
 
   return (
-    <CanvasFrame isMemoShown={isMemoShown}>
-      <CanvasMenu />
-      <Canvas ref={canvasRef} {...(isCanvasOpen && canvasAttrs)} isCanvasOpen={isCanvasOpen} />
-    </CanvasFrame>
+    <>
+      <CanvasFrame isShown={isMemoShown}>
+        <CanvasMenu />
+        <EraserCanvas ref={canvasRef} />
+
+        <Canvas ref={canvasRef} {...(isCanvasOpen && canvasAttrs)} isCanvasOpen={isCanvasOpen} />
+      </CanvasFrame>
+    </>
   );
 }
-
-const CanvasFrame = styled.div<{ isMemoShown: boolean }>`
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-
-  z-index: calc(var(--zIndex-2st) * -1);
-  opacity: 0;
-  transition: opacity 0.1s ease-in, z-index 0.1s ease-in;
-
-  ${({ isMemoShown }) =>
-    isMemoShown &&
-    css`
-      z-index: calc(var(--zIndex-2st));
-      opacity: 1;
-    `}
-`;
-const Canvas = styled.canvas<{ isCanvasOpen: boolean }>`
-  touch-action: ${({ isCanvasOpen }) => (isCanvasOpen ? 'none' : 'initial')};
-`;
 
 export default MemoCanvas;

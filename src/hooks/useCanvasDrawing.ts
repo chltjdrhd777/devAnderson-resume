@@ -34,7 +34,7 @@ interface Memo {
 
 function useCanvasDrawing() {
   const isCanvasOpen = useRecoilValue(memoCanvasAtom).isCanvasOpen;
-  const { drawType, penSize } = useRecoilValue(menuConfigAtom);
+  const { currentTool, drawType, penSize } = useRecoilValue(menuConfigAtom);
   const { selectedColor } = useRecoilValue(pickerCircleAtom);
   const isMobile = checkMobile();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -262,13 +262,12 @@ function useCanvasDrawing() {
   useEffect(() => {
     // 윈도우 사이즈가 변경될 때마다 캔버스에 사용될 이미지 데이터를 넣는 로직
     const canvas = canvasRef.current;
-    const parentElement = canvas.parentElement;
     const context = canvas.getContext('2d', { willReadFrequently: true });
     canvasCtxRef.current = context;
 
     const updateCanvasSize = () => {
-      canvas.width = parentElement.clientWidth;
-      canvas.height = parentElement.clientHeight;
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
       debounce(redraw, 500)();
     };
     updateCanvasSize();
