@@ -10,14 +10,15 @@ interface OptionProps extends MoleculeProps<HTMLButtonElement> {
   isMobile?: Boolean;
 }
 function Option({ children, additialCSS, ...props }: PropsWithChildren<OptionProps>) {
-  // 0. 모든 컴포넌트는 변동성을 고려해야 한다. (cloneElement를 활용하도록 하자)
-  // 1. Styled 컴포넌트(디자인)을 Base Atom으로 보고, 스타일 상속을 통해 Molecule에서 조합 및 디자인
-  // 2. Molecule 별로 개별적인 디자인 => Props를 통해 CSS 건네받아서 적용
-  // 3. Molecule 별로 개별적인 기능 => Props를 통해 Handler 건네받아서 적용
-  const isMobile = checkMobile();
+  // 내가 이해하고 변동적으로 시도해보려고 하는 Atomic Design
+  // 0. 실무적으로는 항상 변동성을 고려해야 한다.
+  // 1. Atom은 상대적으로 변하지 않는, 스토리보드 상에 존재하는 디자인적 고정 형태
+  // 2. Molecule은 변동과 확장을 최대한 고려해야하는, Atom을 통한 디자인적 확장 + props를 통한 기능적 확장.
+  // 3. organism은 Molecule을 통해 파생되어 발생하는 독립적 기능단위 컴포넌트
+  // 4. pages는 organism들이 모여서 만들어지는 의미론적 웹 구성단위.
 
   return (
-    <Button additialCSS={additialCSS} {...props} isMobile={isMobile}>
+    <Button additialCSS={additialCSS} {...props}>
       <ButtonIconContainer className="button-icon-container">{children}</ButtonIconContainer>
     </Button>
   );
@@ -31,28 +32,16 @@ const Button = styled(BaseButton)<OptionProps>`
   overflow: hidden;
   background-color: ${({ theme }) => theme.backgroundColor};
 
-  transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+  transition: opacity 0.25s ease-in-out, transform 0.5s ease-in-out;
   transform: scale(0.85);
   opacity: 0.5;
 
-  ${({ isMobile }) =>
-    !isMobile &&
+  ${genMedia(
+    'web(1024px)',
     css`
-      //모바일에는 호버가 없기 때문에 이 스타일링이 오히려 UI적인 디버그를 야기하므로 조건부로 설정
-      &:hover {
-        transform: scale(1);
-        opacity: 1;
-      }
-      ${genMedia(
-        'web(1024px)',
-        css`
-          transform: scale(1.1);
-          &:hover {
-            transform: scale(1.3);
-          }
-        `,
-      )}
-    `}
+      transform: scale(1.1);
+    `,
+  )}
 
   ${({ theme }) => theme.middle};
   ${({ additialCSS }) => additialCSS};

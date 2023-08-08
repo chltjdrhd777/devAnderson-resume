@@ -1,28 +1,32 @@
-import React, { useEffect, useState } from 'react';
-import MenuBtn from './Button/MenuBtn';
+import React, { useState } from 'react';
+import MenuBtn from './Button/organism/MenuBtn';
 import styled from '@emotion/styled';
 import { css } from '@emotion/react';
 import ColorPicker from './ColorPicker';
 import { useRecoilValue } from 'recoil';
 import { memoCanvasAtom, menuConfigAtom } from 'recoil/memo';
-import MenuConfigSlider from './Slider/Molecule/MenuConfigSlider';
+import MenuToolSizeSlider from './Slider/Molecule/MenuToolSize';
 import { GoPencil } from 'react-icons/go';
+import { BsFillEraserFill } from 'react-icons/bs';
 import { colors } from 'styles/theme';
-import { useSelector } from 'redux/store';
 import useRecoilImmerState from 'hooks/useImmerState';
-import { debounce } from 'helper/debounce';
 
 function CanvasMenu() {
   const { isCanvasOpen } = useRecoilValue(memoCanvasAtom);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuConfig, setMenuConfig] = useRecoilImmerState(menuConfigAtom);
 
-  useEffect(() => {
-    console.log(menuConfig.penSize);
-  });
-  const onChangePensize = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onChangeSize = (e: React.ChangeEvent<HTMLInputElement>, tool: 'pen' | 'eraser') => {
     setMenuConfig((draft) => {
-      draft.penSize = +e.target.value;
+      const value = +e.target.value;
+      if (tool === 'pen') {
+        draft.penSize = value;
+      }
+
+      if (tool === 'eraser') {
+        draft.eraserSize = value;
+      }
+
       return draft;
     });
   };
@@ -35,13 +39,23 @@ function CanvasMenu() {
         <ColorPicker />
 
         <Configs>
-          <MenuConfigSlider
+          <MenuToolSizeSlider
             SliderIcon={GoPencil}
             labelText="펜 크기"
             min={1}
             max={5}
             value={menuConfig.penSize}
-            onChange={onChangePensize}
+            onChange={(e) => onChangeSize(e, 'pen')}
+            step={0.0001}
+          />
+
+          <MenuToolSizeSlider
+            SliderIcon={BsFillEraserFill}
+            labelText="지우개 크기"
+            min={1}
+            max={5}
+            value={menuConfig.eraserSize}
+            onChange={(e) => onChangeSize(e, 'eraser')}
             step={0.0001}
           />
         </Configs>
