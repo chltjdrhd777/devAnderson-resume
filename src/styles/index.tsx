@@ -12,7 +12,7 @@ import Content from 'components/Content';
 import GradientHeader from 'components/GradientHeader';
 import { css } from '@emotion/react';
 import MemoCanvas from 'components/MemoCanvas';
-import OpenCanvasBtn from 'components/Button/OpenCanvasBtn';
+import OpenCanvasBtn from 'components/Button/organism/OpenCanvasBtn';
 import MemoShownBtn from 'components/Button/organism/MemoShownBtn';
 
 const IndexPage: NextPage = () => {
