@@ -53,8 +53,8 @@ function CanvasMenu() {
             <MenuToolSizeSlider
               SliderIcon={BsFillEraserFill}
               labelText="지우개 크기"
-              min={1}
-              max={5}
+              min={7}
+              max={30}
               value={menuConfig.eraserSize}
               onChange={(e) => onChangeSize(e, 'eraser')}
               step={0.0001}

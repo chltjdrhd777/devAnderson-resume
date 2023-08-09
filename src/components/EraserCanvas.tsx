@@ -9,12 +9,15 @@ import { css } from '@emotion/react';
 import { useUpdateCanvasSize } from 'hooks/useUpdateCanvasSize';
 
 type MemoCanvasRefType = HTMLCanvasElement | null;
-interface EraserCanvasProps {}
+interface EraserCanvasProps {
+  saveDrawing: Function;
+}
 
-const EraserCanvas = forwardRef<MemoCanvasRefType, EraserCanvasProps>((props, memoCanvasRef) => {
+const EraserCanvas = forwardRef<MemoCanvasRefType, EraserCanvasProps>(({ saveDrawing }, memoCanvasRef) => {
   const isMobile = checkMobile();
   const isCanvasOpen = useRecoilValue(memoCanvasAtom).isCanvasOpen;
   const menuConfig = useRecoilValue(menuConfigAtom);
+  const isShown = isCanvasOpen && menuConfig.currentTool === 'eraser';
 
   const [isEraserDown, setIsEraserDown] = useState(false);
   const eraserCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -22,26 +25,31 @@ const EraserCanvas = forwardRef<MemoCanvasRefType, EraserCanvasProps>((props, me
   const memoCanvasCtxRef = useRef<CanvasRenderingContext2D | null>(null);
   const eraseLastCoords = useRef<{ x: number | null; y: number | null }>({ x: null, y: null });
 
-  useUpdateCanvasSize(eraserCanvasRef, eraserCanvasCtxRef, isMobile);
+  useUpdateCanvasSize(eraserCanvasRef, eraserCanvasCtxRef, isMobile, [isShown]);
   useEffect(() => {
     const memoCanvas = (memoCanvasRef as RefObject<MemoCanvasRefType>).current;
     memoCanvasCtxRef.current = memoCanvas?.getContext('2d');
   }, [memoCanvasRef]);
 
-  const { onMouseDown, onMouseMove, onMouseUp } = EraserCanvasHandlers.init({
-    refs: { eraserCanvasRef, eraserCanvasCtxRef, memoCanvasRef, memoCanvasCtxRef, eraseLastCoords },
-    states: { isCanvasOpen, isEraserDown, menuConfig },
-    setters: { setIsEraserDown },
-  });
+  const { onMouseDown, onMouseMove, onMouseUp, onPointerDown, onPointerMove, onPointerUp } =
+    EraserHandlersSupportingMobile.initWidthMobileHandlers({
+      refs: { eraserCanvasRef, eraserCanvasCtxRef, memoCanvasRef, memoCanvasCtxRef, eraseLastCoords },
+      states: { isCanvasOpen, isEraserDown, menuConfig },
+      setters: { setIsEraserDown, saveDrawing },
+    });
 
   return (
-    <EraserCanvasFrame isShown={isCanvasOpen && menuConfig.currentTool === 'eraser'}>
+    <EraserCanvasFrame isShown={isShown}>
       <Canvas
         ref={eraserCanvasRef}
         isCanvasOpen={isCanvasOpen}
         onMouseDown={onMouseDown}
         onMouseMove={onMouseMove}
         onMouseUp={onMouseUp}
+        onMouseLeave={onMouseUp}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
       />
     </EraserCanvasFrame>
   );
@@ -66,15 +74,16 @@ interface EraserCanvasHandlersProps {
   };
   setters: {
     setIsEraserDown: (value: React.SetStateAction<boolean>) => void;
+    saveDrawing: Function;
   };
 }
 class EraserCanvasHandlers {
-  private constructor(
-    private refs: EraserCanvasHandlersProps['refs'],
-    private states: EraserCanvasHandlersProps['states'],
-    private setters: EraserCanvasHandlersProps['setters'],
+  protected constructor(
+    protected refs: EraserCanvasHandlersProps['refs'],
+    protected states: EraserCanvasHandlersProps['states'],
+    protected setters: EraserCanvasHandlersProps['setters'],
   ) {}
-  private resetEraserData = () => {
+  protected resetEraserData = () => {
     this.setters.setIsEraserDown(false);
     this.refs.eraserCanvasCtxRef.current.clearRect(
       0,
@@ -83,7 +92,7 @@ class EraserCanvasHandlers {
       this.refs.eraserCanvasRef.current.height,
     );
   };
-  private genEraserCircle = (params: { x?: number; y?: number; size: number }) => {
+  protected genEraserCircle = (params: { x?: number; y?: number; size: number }) => {
     const { x, y, size } = params;
     const { clientWidth: parentWidth, clientHeight: parentHeight } = this.refs.eraserCanvasRef.current?.parentElement;
     const context = this.refs.eraserCanvasCtxRef.current;
@@ -94,7 +103,7 @@ class EraserCanvasHandlers {
     context?.stroke();
     context?.closePath();
   };
-  private eraseMemo = (params: { x?: number; y?: number; size: number }) => {
+  protected eraseMemo = (params: { x?: number; y?: number; size: number }) => {
     const { x, y, size } = params;
     const context = this.refs.memoCanvasCtxRef.current;
     context.globalCompositeOperation = 'destination-out'; //cantext의 그려진 값이 서로 겹칠 경우, 겹쳐진 부분은 보이지 않게 설정.
@@ -116,6 +125,7 @@ class EraserCanvasHandlers {
     this.refs.eraseLastCoords.current = { x: eraseData.x, y: eraseData.y };
     this.genEraserCircle(eraseData);
     this.eraseMemo(eraseData);
+    this.setters.saveDrawing();
   };
 
   onMouseMove = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
@@ -130,9 +140,10 @@ class EraserCanvasHandlers {
     }
   };
 
-  onMouseUp = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
+  onMouseUp = () => {
     if (this.states.isEraserDown) {
       this.resetEraserData();
+      this.setters.saveDrawing();
     }
   };
 
@@ -141,18 +152,73 @@ class EraserCanvasHandlers {
   }
 }
 
+class EraserHandlersSupportingMobile extends EraserCanvasHandlers {
+  constructor(props: EraserCanvasHandlersProps) {
+    super(props.refs, props.states, props.setters);
+  }
+
+  checkPointerType = (pointerType: 'mouse' | 'touch' | 'pen', callback: Function) => {
+    console.log(pointerType, this.states.menuConfig.drawType);
+    if (pointerType === this.states.menuConfig.drawType) {
+      callback();
+    }
+  };
+
+  onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    this.checkPointerType(e.pointerType, () => {
+      this.setters.setIsEraserDown(true);
+      const eraseData = {
+        x: e.pageX,
+        y: e.pageY,
+        size: this.states.menuConfig.eraserSize,
+      };
+
+      this.refs.eraseLastCoords.current = { x: eraseData.x, y: eraseData.y };
+      this.genEraserCircle(eraseData);
+      this.eraseMemo(eraseData);
+      this.setters.saveDrawing();
+    });
+  };
+
+  onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    this.checkPointerType(e.pointerType, () => {
+      if (this.states.isCanvasOpen && this.states.isEraserDown) {
+        const eraseData = {
+          x: e.pageX,
+          y: e.pageY,
+          size: this.states.menuConfig.eraserSize,
+        };
+        this.genEraserCircle(eraseData);
+        this.eraseMemo(eraseData);
+      }
+    });
+  };
+
+  onPointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    this.checkPointerType(e.pointerType, () => {
+      if (this.states.isEraserDown) {
+        this.resetEraserData();
+        this.setters.saveDrawing();
+      }
+    });
+  };
+
+  static initWidthMobileHandlers = (props: EraserCanvasHandlersProps) => {
+    return new EraserHandlersSupportingMobile(props);
+  };
+}
+
 // styled
 const EraserCanvasFrame = styled(BaseCanvasFrame)`
   width: 100%;
   height: 100%;
-  z-index: calc((var(--zIndex-2st) + 100) * -1);
+  display: none;
+
   ${({ isShown }) =>
     isShown &&
     css`
-      background-color: red;
-      opacity: 0.3;
-      z-index: calc(var(--zIndex-2st) + 100);
-    `};
+      display: block;
+    `}
 `;
 const Canvas = styled(BaseCanvas)``;
 
