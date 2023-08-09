@@ -29,6 +29,7 @@ function Index() {
     onDrawing,
     startDrawing,
     stopDrawing,
+    saveDrawing,
     onMouseLeave,
     startDrawingForMobile,
     onDrawingForMobile,
@@ -56,7 +57,7 @@ function Index() {
       <CanvasFrame isShown={isMemoShown}>
         <CanvasMenu />
 
-        <EraserCanvas ref={canvasRef} />
+        <EraserCanvas ref={canvasRef} saveDrawing={saveDrawing} />
         <MemoCanvas ref={canvasRef} {...(isCanvasOpen && canvasAttrs)} isCanvasOpen={isCanvasOpen} />
       </CanvasFrame>
     </>

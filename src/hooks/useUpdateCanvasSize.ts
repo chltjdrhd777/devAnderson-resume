@@ -4,6 +4,7 @@ export const useUpdateCanvasSize = (
   canvasRef: React.MutableRefObject<HTMLCanvasElement>,
   canvasCtxRef: React.MutableRefObject<CanvasRenderingContext2D>,
   isMobile: boolean,
+  dependencies: any[] = [],
 ) => {
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -22,5 +23,5 @@ export const useUpdateCanvasSize = (
         window.removeEventListener('resize', updateCanvasSize);
       };
     }
-  }, [isMobile]);
+  }, [isMobile, ...dependencies]);
 };

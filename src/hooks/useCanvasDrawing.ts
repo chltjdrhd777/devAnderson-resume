@@ -34,7 +34,7 @@ interface Memo {
 
 function useCanvasDrawing() {
   const isCanvasOpen = useRecoilValue(memoCanvasAtom).isCanvasOpen;
-  const { currentTool, drawType, penSize } = useRecoilValue(menuConfigAtom);
+  const { drawType, penSize } = useRecoilValue(menuConfigAtom);
   const { selectedColor } = useRecoilValue(pickerCircleAtom);
   const isMobile = checkMobile();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -306,6 +306,7 @@ function useCanvasDrawing() {
     onDrawing,
     startDrawing,
     stopDrawing,
+    saveDrawing,
     onMouseLeave,
     startDrawingForMobile,
     onDrawingForMobile,
