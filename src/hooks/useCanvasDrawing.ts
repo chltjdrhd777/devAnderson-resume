@@ -83,8 +83,16 @@ function useCanvasDrawing() {
     }
   };
 
-  const updateDrawPathRef = (imageData: ImageData) => {
-    updateMemorizedImageData(imageData)
+  const initDrawPath = async (value: Memo) => {
+    for (let dataUrl of value?.dataUrlList ?? []) {
+      const convertedDataUrl = await converURLToImageData(dataUrl);
+      convertedDataUrl instanceof ImageData && (await updateDrawPathRef(convertedDataUrl));
+    }
+
+    updateCanvasSize(canvasRef.current);
+  };
+  const updateDrawPathRef = async (imageData: ImageData) => {
+    await updateMemorizedImageData(imageData)
       .then(() => updatememoPrevImageSize(imageData))
       .then(() => {
         pushNewImageData(imageData);
@@ -258,43 +266,37 @@ function useCanvasDrawing() {
       context?.putImageData(imageData, 0, 0);
     });
   };
+  const updateCanvasSize = (canvas: HTMLCanvasElement | null) => {
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight;
+    redraw();
+  };
 
   useEffect(() => {
-    // 윈도우 사이즈가 변경될 때마다 캔버스에 사용될 이미지 데이터를 넣는 로직
+    // canvas의 context를 초기 저장하는 로직
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d', { willReadFrequently: true });
     canvasCtxRef.current = context;
+  }, []);
 
-    const updateCanvasSize = () => {
-      canvas.width = canvas.parentElement.clientWidth;
-      canvas.height = canvas.parentElement.clientHeight;
-      debounce(redraw, 500)();
-    };
-    updateCanvasSize();
+  useEffect(() => {
+    // 윈도우 사이즈가 변경될 때마다 캔버스에 사용될 이미지 데이터를 넣는 로직
+    const resizeHandler = () => updateCanvasSize(canvasRef.current);
 
     if (!isMobile) {
-      window.addEventListener('resize', updateCanvasSize);
+      window.addEventListener('resize', resizeHandler);
       return () => {
-        window.removeEventListener('resize', updateCanvasSize);
+        window.removeEventListener('resize', resizeHandler);
       };
     }
   }, [isMobile]);
 
   useEffect(() => {
     // 첫 진입시 IndexedDB가 초기화되는 것을 감지하고 그 안에 있는 데이터를 가져오는 로직
-    (() =>
-      getLastValueFromTable<Memo>(tableEnum.memo, indexing.memo).then(async (value) => {
-        if (value && value.dataUrlList) {
-          const { dataUrlList } = value;
-
-          for (let dataUrl of dataUrlList) {
-            const convertedDataUrl = await converURLToImageData(dataUrl);
-            if (convertedDataUrl instanceof ImageData) {
-              updateDrawPathRef(convertedDataUrl);
-            }
-          }
-        }
-      }))();
+    // useEffect 내에서 비동기 함수 호출을 위함이라 IIEF로 적용
+    (() => {
+      getLastValueFromTable<Memo>(tableEnum.memo, indexing.memo).then(initDrawPath);
+    })();
   }, [database]);
 
   return {

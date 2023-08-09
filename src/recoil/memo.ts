@@ -33,7 +33,7 @@ export const memoLengthAtom = atom<number>({
 
 export const memoLimitAtom = atom<number>({
   key: 'memoLimitAtom',
-  default: 30,
+  default: 20,
 });
 
 export const memoContextAttrAtom = atom<Partial<CanvasRenderingContext2D>>({
