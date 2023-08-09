@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-export const useCanvasSizeUpdate = (
+export const useUpdateCanvasSize = (
   canvasRef: React.MutableRefObject<HTMLCanvasElement>,
   canvasCtxRef: React.MutableRefObject<CanvasRenderingContext2D>,
   isMobile: boolean,

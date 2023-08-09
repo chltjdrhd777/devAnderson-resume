@@ -231,22 +231,22 @@ const ColorPicker = () => {
       }
     };
 
-    static onTouchStart(event: React.TouchEvent<HTMLCanvasElement>) {
+    static onTouchStart = (event: React.TouchEvent<HTMLCanvasElement>) => {
       isColorBarPressedRef.current = true;
       handlePointerHeightForMobile(event);
-    }
+    };
 
-    static onTouchMove(event: React.TouchEvent<HTMLCanvasElement>) {
+    static onTouchMove = (event: React.TouchEvent<HTMLCanvasElement>) => {
       if (isColorBarPressedRef.current) {
         handlePointerHeightForMobile(event);
       }
-    }
+    };
 
-    static onTouchEnd() {
+    static onTouchEnd = () => {
       if (isColorBarPressedRef.current) {
         isColorBarPressedRef.current = false;
       }
-    }
+    };
   }
 
   class PickerCircleCanvasHandlers {
@@ -278,22 +278,22 @@ const ColorPicker = () => {
       }
     };
 
-    static onTouchStart(event: React.TouchEvent<HTMLCanvasElement>) {
+    static onTouchStart = (event: React.TouchEvent<HTMLCanvasElement>) => {
       isPickerCanvasPressedRef.current = true;
       handlePickerCirclePostionForMobile(event);
-    }
+    };
 
-    static onTouchMove(event: React.TouchEvent<HTMLCanvasElement>) {
+    static onTouchMove = (event: React.TouchEvent<HTMLCanvasElement>) => {
       if (isPickerCanvasPressedRef.current) {
         handlePickerCirclePostionForMobile(event);
       }
-    }
+    };
 
-    static onTouchEnd() {
+    static onTouchEnd = () => {
       if (isPickerCanvasPressedRef.current) {
         isPickerCanvasPressedRef.current = false;
       }
-    }
+    };
   }
 
   const init = () => {

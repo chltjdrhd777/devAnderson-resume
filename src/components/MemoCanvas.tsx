@@ -8,9 +8,9 @@ import { menuConfigAtom } from 'recoil/memo';
 import { checkMobile } from 'helper/checkMobile';
 import preventCanvasDefault from 'helper/preventCanvasDefault';
 import EraserCanvas from './EraserCanvas';
-import { Canvas, CanvasFrame } from './Canvas/Atom/BaseCanvas';
+import { Canvas as MemoCanvas, CanvasFrame } from './Canvas/Atom/BaseCanvas';
 
-function MemoCanvas() {
+function Index() {
   // todo 텍스트 넣기 기능 추가
   // 선 굵기 바꾸기
   // 선 색 바꾸기
@@ -55,12 +55,12 @@ function MemoCanvas() {
     <>
       <CanvasFrame isShown={isMemoShown}>
         <CanvasMenu />
-        <EraserCanvas ref={canvasRef} />
 
-        <Canvas ref={canvasRef} {...(isCanvasOpen && canvasAttrs)} isCanvasOpen={isCanvasOpen} />
+        <EraserCanvas ref={canvasRef} />
+        <MemoCanvas ref={canvasRef} {...(isCanvasOpen && canvasAttrs)} isCanvasOpen={isCanvasOpen} />
       </CanvasFrame>
     </>
   );
 }
 
-export default MemoCanvas;
+export default Index;
