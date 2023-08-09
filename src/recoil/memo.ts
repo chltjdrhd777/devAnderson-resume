@@ -52,7 +52,7 @@ export const menuConfigAtom = atom<MenuConfigAtom>({
     pickerBackground: 'rgba(255, 0, 0, 1)',
     currentTool: 'pen',
     penSize: 1,
-    eraserSize: 1,
+    eraserSize: 7,
     drawType: 'touch',
     pressure: false,
   },
