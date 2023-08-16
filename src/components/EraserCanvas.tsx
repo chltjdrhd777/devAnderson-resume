@@ -3,7 +3,6 @@ import React, { Ref, RefObject, forwardRef, useEffect, useRef, useState } from '
 import { CanvasFrame as BaseCanvasFrame, Canvas as BaseCanvas } from './Canvas/Atom/BaseCanvas';
 import { useRecoilValue } from 'recoil';
 import { MenuConfigAtom, memoCanvasAtom, memoLengthAtom, menuConfigAtom } from 'recoil/memo';
-import { useSelector } from 'redux/store';
 import { checkMobile } from 'helper/checkMobile';
 import { css } from '@emotion/react';
 import { useUpdateCanvasSize } from 'hooks/useUpdateCanvasSize';
@@ -32,7 +31,7 @@ const EraserCanvas = forwardRef<MemoCanvasRefType, EraserCanvasProps>(({ saveDra
   }, [memoCanvasRef]);
 
   const { onMouseDown, onMouseMove, onMouseUp, onPointerDown, onPointerMove, onPointerUp } =
-    EraserHandlersSupportingMobile.initWidthMobileHandlers({
+    EraserHandlersSupportingMobile.initWithMobileHandlers({
       refs: { eraserCanvasRef, eraserCanvasCtxRef, memoCanvasRef, memoCanvasCtxRef, eraseLastCoords },
       states: { isCanvasOpen, isEraserDown, menuConfig },
       setters: { setIsEraserDown, saveDrawing },
@@ -203,7 +202,7 @@ class EraserHandlersSupportingMobile extends EraserCanvasHandlers {
     });
   };
 
-  static initWidthMobileHandlers = (props: EraserCanvasHandlersProps) => {
+  static initWithMobileHandlers = (props: EraserCanvasHandlersProps) => {
     return new EraserHandlersSupportingMobile(props);
   };
 }

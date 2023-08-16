@@ -1,12 +1,6 @@
 import React, { useState } from 'react';
 import Option from '../Molecule/Option';
-import {
-  isClearMemoNoticeModalOpenAtom,
-  isClearMemoTriggeredAtom,
-  memoCanvasAtom,
-  memoLengthAtom,
-  menuConfigAtom,
-} from 'recoil/memo';
+import { isClearMemoNoticeModalOpenAtom, isClearMemoTriggeredAtom, memoCanvasAtom, memoLengthAtom } from 'recoil/memo';
 import useRecoilImmerState from 'hooks/useImmerState';
 import { GrClearOption } from 'react-icons/gr';
 import { css } from '@emotion/react';
@@ -41,6 +35,8 @@ function ClearBtn() {
   };
 
   const onOptionClick = async () => {
+    if (!memoLength) return;
+
     const noticeIgnoreTime = await getValue<number | undefined>({
       tableName: tableEnum.userConfig,
       key: IGNORETIME_KEY,
