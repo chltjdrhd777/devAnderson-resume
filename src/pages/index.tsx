@@ -18,6 +18,7 @@ import useRecoilImmerState from 'hooks/useImmerState';
 import { indexedDBAtom } from 'recoil/IndexedDB';
 import useCheckIndexedDB from 'hooks/useCheckIndexedDB';
 import useRestoreScroll from 'hooks/useRestoreScroll';
+import CanvasMenu from 'components/CanvasMenu';
 
 const IndexPage: NextPage = () => {
   const [database, setDatabase] = useRecoilImmerState(indexedDBAtom);
@@ -34,6 +35,8 @@ const IndexPage: NextPage = () => {
         <Content />
 
         <Portal>
+          <CanvasMenu />
+
           <Options>
             <MemoShownBtn />
             <OpenCanvasBtn />

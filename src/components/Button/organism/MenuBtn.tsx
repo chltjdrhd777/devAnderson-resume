@@ -14,6 +14,7 @@ function MenuBtn(props: HTMLAttributes<HTMLButtonElement>) {
 }
 
 const additionalCSS = css`
+  z-index: var(--zIndex-1st);
   &.active {
     transform: scale(1);
     opacity: 1;

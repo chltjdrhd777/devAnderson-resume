@@ -2,7 +2,6 @@ import React, { CanvasHTMLAttributes, forwardRef, useLayoutEffect } from 'react'
 
 import useCanvasDrawing from 'hooks/useCanvasDrawing';
 import { useSelector } from 'redux/store';
-import CanvasMenu from './CanvasMenu';
 import { useRecoilValue } from 'recoil';
 import { isClearMemoTriggeredAtom, menuConfigAtom } from 'recoil/memo';
 import { checkMobile } from 'helper/checkMobile';
@@ -78,7 +77,6 @@ interface MemoCanvasProps {
 }
 const MemoCanvas = forwardRef<MemoCanvasRefType, MemoCanvasProps>(({ isMemoShown, isCanvasOpen, canvasAttrs }, ref) => (
   <CanvasFrame isShown={isMemoShown}>
-    <CanvasMenu />
     <Canvas ref={ref} {...(isCanvasOpen && canvasAttrs)} isCanvasOpen={isCanvasOpen} />
   </CanvasFrame>
 ));
