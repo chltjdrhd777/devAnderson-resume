@@ -213,11 +213,13 @@ const EraserCanvasFrame = styled(BaseCanvasFrame)`
   width: 100%;
   height: 100%;
   display: none;
+  z-index: calc((var(--zIndex-2st) + 100) * -1);
 
   ${({ isShown }) =>
     isShown &&
     css`
       display: block;
+      z-index: calc(var(--zIndex-2st) + 100);
     `}
 `;
 const Canvas = styled(BaseCanvas)``;

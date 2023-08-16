@@ -76,6 +76,15 @@ export const pickerCircleAtom = atom<PickerCircle>({
   },
 });
 
+export const isClearMemoNoticeModalOpenAtom = atom({
+  key: 'isClearMemoNoticeModalOpenAtom',
+  default: false,
+});
+export const isClearMemoTriggeredAtom = atom({
+  key: 'isClearTriggeredAtom',
+  default: false,
+});
+
 export const useSetMemoImpossible = () => {
   const [_, setCanSaveMemo] = useRecoilImmerState(memoCanvasAtom);
   setCanSaveMemo((draft) => {
