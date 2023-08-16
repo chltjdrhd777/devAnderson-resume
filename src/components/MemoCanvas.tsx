@@ -1,14 +1,15 @@
-import React, { CanvasHTMLAttributes, useLayoutEffect } from 'react';
+import React, { CanvasHTMLAttributes, forwardRef, useLayoutEffect } from 'react';
 
 import useCanvasDrawing from 'hooks/useCanvasDrawing';
 import { useSelector } from 'redux/store';
 import CanvasMenu from './CanvasMenu';
 import { useRecoilValue } from 'recoil';
-import { menuConfigAtom } from 'recoil/memo';
+import { isClearMemoTriggeredAtom, menuConfigAtom } from 'recoil/memo';
 import { checkMobile } from 'helper/checkMobile';
 import preventCanvasDefault from 'helper/preventCanvasDefault';
 import EraserCanvas from './EraserCanvas';
-import { Canvas as MemoCanvas, CanvasFrame } from './Canvas/Atom/BaseCanvas';
+import { Canvas, CanvasFrame } from './Canvas/Atom/BaseCanvas';
+import useRecoilImmerState from 'hooks/useImmerState';
 
 function Index() {
   // todo 텍스트 넣기 기능 추가
@@ -21,6 +22,7 @@ function Index() {
   const isMobile = checkMobile();
   const memo = useSelector((state) => state.user.memo); //사용자별 영속성이어야 하기에 Redux-persist로 로컬관리
   const { drawType } = useRecoilValue(menuConfigAtom);
+  const [isClearMemoTriggered, setIsClearMemoTriggered] = useRecoilImmerState(isClearMemoTriggeredAtom);
 
   const {
     isCanvasOpen,
@@ -34,6 +36,7 @@ function Index() {
     startDrawingForMobile,
     onDrawingForMobile,
     stopDrawingForMobile,
+    clearDrawing,
   } = useCanvasDrawing();
 
   const isMemoShown = (memo.isMemoShown && drawPathLength !== 0) || isCanvasOpen;
@@ -52,16 +55,32 @@ function Index() {
     preventCanvasDefault(canvasRef.current, 'dblclick'); // 더클블릭 막기
   }, []);
 
+  useLayoutEffect(() => {
+    if (isClearMemoTriggered) {
+      clearDrawing();
+      setIsClearMemoTriggered(false);
+    }
+  }, [isClearMemoTriggered]);
+
   return (
     <>
-      <CanvasFrame isShown={isMemoShown}>
-        <CanvasMenu />
-
-        <EraserCanvas ref={canvasRef} saveDrawing={saveDrawing} />
-        <MemoCanvas ref={canvasRef} {...(isCanvasOpen && canvasAttrs)} isCanvasOpen={isCanvasOpen} />
-      </CanvasFrame>
+      <EraserCanvas ref={canvasRef} saveDrawing={saveDrawing} />
+      <MemoCanvas ref={canvasRef} isMemoShown={isMemoShown} isCanvasOpen={isCanvasOpen} canvasAttrs={canvasAttrs} />
     </>
   );
 }
+
+type MemoCanvasRefType = HTMLCanvasElement | null;
+interface MemoCanvasProps {
+  isMemoShown: boolean;
+  isCanvasOpen: boolean;
+  canvasAttrs: CanvasHTMLAttributes<HTMLCanvasElement>;
+}
+const MemoCanvas = forwardRef<MemoCanvasRefType, MemoCanvasProps>(({ isMemoShown, isCanvasOpen, canvasAttrs }, ref) => (
+  <CanvasFrame isShown={isMemoShown}>
+    <CanvasMenu />
+    <Canvas ref={ref} {...(isCanvasOpen && canvasAttrs)} isCanvasOpen={isCanvasOpen} />
+  </CanvasFrame>
+));
 
 export default Index;

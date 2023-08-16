@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import useCheckIndexedDB from './useCheckIndexedDB';
 import {
   handleCreateErr,
@@ -7,6 +7,9 @@ import {
   handleOpenCursorErr,
   handleTransactionErr,
 } from 'Error/indexedDB';
+import useRecoilImmerState from './useImmerState';
+import { indexedDBAtom } from 'recoil/IndexedDB';
+import { indexing } from 'indexedDB/versionManager';
 
 //해당 로직은 memoCanvas에서만 사용될 것이므로, database instance가 유지될 필요가 없음.
 //만약 이 훅이 여러 컴포넌트에 쓰인다면, 매번 호출 때마다 database를 초기화 할 것이므로 비효율적
@@ -20,20 +23,11 @@ import {
 // 단, 해당 에러를 나타낼 컴포넌트가 memo component와 다른 장소에 있으므로 Recoil이나, Jotai를 이용해 전역적 상태 조회 시스템 구축 필요.
 
 interface Params {
-  dbName: string;
+  dbName?: string;
 }
 
-export const tableEnum = {
-  memo: 'memo',
-} as const;
-Object.freeze(tableEnum);
-
-export const indexing = {
-  memo: 'snapshot',
-};
-
 function useIndexedDB({ dbName }: Params) {
-  const [database, setDatabase] = useState<IDBDatabase | null>(null);
+  const [database] = useRecoilImmerState(indexedDBAtom);
 
   // METHOD
   const getDatabase = () => database;
@@ -71,6 +65,29 @@ function useIndexedDB({ dbName }: Params) {
     database.deleteObjectStore(tableName);
   };
 
+  const getValue = <T>({ tableName, indexing, key }: { tableName: string; indexing?: string; key: any }) => {
+    return new Promise<T>((resolve, reject) => {
+      try {
+        if (!database) {
+          return resolve(undefined);
+        }
+
+        const transaction = handleTransactionErr(() => database?.transaction(tableName, 'readonly'));
+        const table = handleObjectStoreErr(() => transaction?.objectStore(tableName));
+        const request = table.get(key);
+
+        request.onsuccess = () => {
+          resolve(request.result);
+        };
+        request.onerror = () => {
+          reject(request.error);
+        };
+      } catch (err) {
+        reject({ reason: 'uncaught error', err });
+      }
+    });
+  };
+
   const getLastValueFromTable = <T>(tableName: string, indexing: string) => {
     return new Promise<T>((resolve, reject) => {
       try {
@@ -98,7 +115,15 @@ function useIndexedDB({ dbName }: Params) {
     });
   };
 
-  const saveTransaction = (tableName: string, data: any, type: 'put' | 'add' = 'add', callback?: Function) => {
+  interface SaveValueParams {
+    tableName: string;
+    key?: any;
+    value: any;
+    type: 'put' | 'add';
+    onSuccess?: () => any;
+    onError?: () => any;
+  }
+  const saveValue = ({ tableName, key, value, type, onSuccess, onError }: SaveValueParams) => {
     if (!database) {
       console.error('no database');
       return;
@@ -107,21 +132,60 @@ function useIndexedDB({ dbName }: Params) {
     try {
       const transaction = handleTransactionErr(() => database?.transaction(tableName, 'readwrite'));
       const table = handleObjectStoreErr(() => transaction?.objectStore(tableName));
-      const request = handleCreateErr(() => (type === 'add' ? table?.add(data) : table?.put(data)));
-      request.onsuccess = () => console.log('save success');
-      request.onerror = (e) => {
+      const request = handleCreateErr(() => (type === 'add' ? table?.add(value, key) : table?.put(value, key)));
+      request.onsuccess = (e) => {
+        console.log('save success');
+        onSuccess && onSuccess();
+      };
+      request.onerror = () => {
         console.error('no suffient space to save data');
-        callback && callback();
+        onError && onError();
       };
     } catch (err) {
       console.log('uncaught error', err);
     }
   };
 
-  // indexedDB 조회 후 database 초기화.
-  useCheckIndexedDB(dbName, setDatabase, createTable);
+  interface DeleteValueParams {
+    tableName: string;
+    key?: any;
 
-  return { database, getDatabase, destroyDatabase, createTable, deleteTable, getLastValueFromTable, saveTransaction };
+    onSuccess?: () => any;
+    onError?: () => any;
+  }
+  const deleteValue = ({ tableName, key, onSuccess, onError }: DeleteValueParams) => {
+    if (!database) {
+      console.error('no database');
+      return;
+    }
+
+    try {
+      const transaction = handleTransactionErr(() => database?.transaction(tableName, 'readwrite'));
+      const table = handleObjectStoreErr(() => transaction?.objectStore(tableName));
+      const request = table.delete(key);
+
+      request.onsuccess = () => {
+        onSuccess && onSuccess();
+      };
+      request.onerror = () => {
+        onError && onError();
+      };
+    } catch (err) {
+      console.log('uncaught error', err);
+    }
+  };
+
+  return {
+    database,
+    getDatabase,
+    destroyDatabase,
+    createTable,
+    deleteTable,
+    getValue,
+    getLastValueFromTable,
+    saveValue,
+    deleteValue,
+  };
 }
 
 export default useIndexedDB;

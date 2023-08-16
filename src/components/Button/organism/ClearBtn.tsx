@@ -1,30 +1,74 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Option from '../Molecule/Option';
-import { memoCanvasAtom, menuConfigAtom } from 'recoil/memo';
+import {
+  isClearMemoNoticeModalOpenAtom,
+  isClearMemoTriggeredAtom,
+  memoCanvasAtom,
+  memoLengthAtom,
+  menuConfigAtom,
+} from 'recoil/memo';
 import useRecoilImmerState from 'hooks/useImmerState';
 import { GrClearOption } from 'react-icons/gr';
 import { css } from '@emotion/react';
 import { genMedia } from 'styles/theme';
+import { useRecoilValue } from 'recoil';
+import useIndexedDB from 'hooks/useIndexedDB';
+import Portal from 'components/Portal';
+import ClearMemoNoticeModal from 'components/Modal/organism/ClearMemoNoticeModal';
+import { indexing, tableEnum } from 'indexedDB/versionManager';
 
 function ClearBtn() {
-  const [canvasConfig, setCanvasConfig] = useRecoilImmerState(memoCanvasAtom);
-  const [menuConfig, setMenuConfig] = useRecoilImmerState(menuConfigAtom);
+  const ONEWEEK = 7 * 24 * 60 * 60 * 1000;
+  const IGNORETIME_KEY = 'noticeIgnoreTime';
+  const memoCanvas = useRecoilValue(memoCanvasAtom);
+  const [isClearNoticeModalOpen, setIsClearNoticeModalOpen] = useRecoilImmerState(isClearMemoNoticeModalOpenAtom);
+  const [isClearMemoTriggered, setIsClearMemoTriggered] = useRecoilImmerState(isClearMemoTriggeredAtom);
+  const memoLength = useRecoilValue(memoLengthAtom);
 
-  const onOptionClick = () => {
-    setMenuConfig((draft) => {
-      draft.currentTool = draft.currentTool === 'pen' ? 'eraser' : 'pen';
-      return draft;
+  const { getValue, saveValue, deleteValue } = useIndexedDB({});
+
+  const onDelete = () =>
+    deleteValue({
+      tableName: tableEnum.memo,
+      key: indexing.memo,
+      onSuccess: () => {
+        setIsClearMemoTriggered(true);
+      },
     });
+
+  const onIgnorePopup = () => {
+    saveValue({ tableName: tableEnum.userConfig, key: IGNORETIME_KEY, value: Date.now(), type: 'put' });
+  };
+
+  const onOptionClick = async () => {
+    const noticeIgnoreTime = await getValue<number | undefined>({
+      tableName: tableEnum.userConfig,
+      key: IGNORETIME_KEY,
+    });
+
+    if (!noticeIgnoreTime || Date.now() - noticeIgnoreTime >= ONEWEEK) {
+      setIsClearNoticeModalOpen(true);
+    } else {
+      onDelete();
+    }
   };
 
   return (
-    <Option onClick={onOptionClick} additialCSS={additonalCSS(canvasConfig.isCanvasOpen)}>
-      <GrClearOption />
-    </Option>
+    <>
+      <Option onClick={onOptionClick} additialCSS={additonalCSS(memoCanvas.isCanvasOpen, memoLength)}>
+        <GrClearOption />
+      </Option>
+
+      {isClearNoticeModalOpen && (
+        <Portal>
+          <ClearMemoNoticeModal onDelete={onDelete} onIgnorePopup={onIgnorePopup} />
+        </Portal>
+      )}
+    </>
   );
 }
 
-const additonalCSS = (isCanvasOpen: boolean) => css`
+const additonalCSS = (isCanvasOpen: boolean, memoLength: number) => css`
   position: absolute;
   transition: all 0.2s ease-out;
 
@@ -39,7 +83,7 @@ const additonalCSS = (isCanvasOpen: boolean) => css`
         top: 50%;
         right: 0;
         visibility: visible;
-        opacity: 1;
+        opacity: ${memoLength > 0 ? 1 : 0.5};
         transform: scale(0.85);
       `
     : css`

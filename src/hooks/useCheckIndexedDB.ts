@@ -3,11 +3,16 @@ import { VersionManager } from 'indexedDB/versionManager';
 import { useSetMemoImpossible } from 'recoil/memo';
 
 function useCheckIndexedDB(
-  dbName: string,
+  database: IDBDatabase | null,
   setDatabase: Dispatch<SetStateAction<IDBDatabase>>,
-  createTable: (tableName: string, db: IDBDatabase | null) => IDBObjectStore,
+  dbName: string,
 ) {
   useEffect(() => {
+    if (database !== null) {
+      return;
+    }
+
+    // 브라우저별 API 지원유무 파악
     const indexedDB =
       window?.indexedDB ||
       (window as any)?.mozIndexedDB ||
@@ -21,7 +26,7 @@ function useCheckIndexedDB(
     }
 
     if (indexedDB) {
-      const request = (indexedDB as IDBFactory).open(dbName, 2);
+      const request = (indexedDB as IDBFactory).open(dbName, 3);
 
       request.onsuccess = (e) => {
         const db = request.result;
@@ -40,7 +45,7 @@ function useCheckIndexedDB(
       request.onupgradeneeded = (e) => {
         // database merger (indexedDB 오픈하여 인스턴스 만든 후, 현 로컬의 indexedDB 확인시 DB가 없거나 버전이 낮으면 호출됨)
         const db = request.result; // 이 콜백 실행 시점에선 open(dbName, 2) 에 대한 인스턴스 초기화 완료 상태.
-        const versionManager = new VersionManager(setDatabase, createTable, db, 'memo', e.oldVersion);
+        const versionManager = new VersionManager(setDatabase, db, e.oldVersion);
         versionManager.update();
       };
     }

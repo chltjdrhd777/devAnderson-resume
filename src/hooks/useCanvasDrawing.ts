@@ -12,11 +12,11 @@ import {
   pickerCircleAtom,
   useSetMemoImpossible,
 } from 'recoil/memo';
-import useIndexedDB, { tableEnum, indexing } from './useIndexedDB';
+import useIndexedDB from './useIndexedDB';
 import useRecoilImmerState from './useImmerState';
-import { convertImageDataToURL } from 'helper/convertImageDataToURL';
 import useDrawPathRef from './useDrawPathRef';
 import { genMergedImageData } from 'helper/genMergedImageData';
+import { indexing, tableEnum } from 'indexedDB/versionManager';
 
 // Ref로 값을 관리하면
 // <Pros>
@@ -39,20 +39,21 @@ function useCanvasDrawing() {
   const isMobile = checkMobile();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasCtxRef = useRef<CanvasRenderingContext2D | null>(null);
+
+  const { drawPathRef, setDrawPathRef, pushNewImageData } = useDrawPathRef();
   const drawStartCoordRef = useRef<{ x: number | null; y: number | null }>({ x: null, y: null });
-  const { drawPathRef, pushNewImageData } = useDrawPathRef();
   const memoPrevImageSize = useRef<{ width: number; height: number }>({
     width: 0,
     height: 0,
   });
   const memorizedImageData = useRef<ImageData[]>([]);
   const mergedDataURL = useRef<string | null>(null);
-
   const [drawPathLength, setDrawPathLength] = useRecoilImmerState(memoLengthAtom);
+
   const [isDrawing, setIsDrawing] = useState(false);
 
   const memoContextAttr = useRecoilValue(memoContextAttrAtom);
-  const { database, saveTransaction, getLastValueFromTable } = useIndexedDB({ dbName: 'resume-indexedDB' });
+  const { database, saveValue, getLastValueFromTable } = useIndexedDB({});
 
   //METHOD
   const updatememoPrevImageSize = async (imageData: ImageData) => {
@@ -113,6 +114,22 @@ function useCanvasDrawing() {
   const resetDrawingData = () => {
     setIsDrawing(false);
     drawStartCoordRef.current = { x: null, y: null };
+  };
+
+  const clearDrawing = () => {
+    const width = Math.max(memoPrevImageSize.current.width, canvasRef.current.parentElement.clientWidth);
+    const height = Math.max(memoPrevImageSize.current.height, canvasRef.current.parentElement.clientHeight);
+    canvasCtxRef.current?.clearRect(0, 0, width, height);
+
+    setDrawPathRef([]);
+    drawStartCoordRef.current = { x: null, y: null };
+    memoPrevImageSize.current = {
+      width: 0,
+      height: 0,
+    };
+    memorizedImageData.current = [];
+    mergedDataURL.current = null;
+    setDrawPathLength(0);
   };
 
   //! mouse event handler
@@ -199,10 +216,17 @@ function useCanvasDrawing() {
       const dataUrlList = genDataList();
 
       const saveData = {
-        snapshot: 'recently saved image dataUrl',
+        snapshot: indexing.memo,
         dataUrlList,
       };
-      saveTransaction(tableEnum.memo, saveData, 'put', useSetMemoImpossible);
+      saveValue({
+        tableName: tableEnum.memo,
+        value: saveData,
+        type: 'put',
+        onError: () => {
+          useSetMemoImpossible();
+        },
+      });
     };
 
     saveDataUrlToIndexedDb(canvas);
@@ -311,6 +335,7 @@ function useCanvasDrawing() {
     startDrawingForMobile,
     onDrawingForMobile,
     stopDrawingForMobile,
+    clearDrawing,
   };
 }
 

@@ -4,7 +4,7 @@ import { genMedia } from 'styles/theme';
 import React, { useEffect } from 'react';
 import dynamic from 'next/dynamic';
 
-const ModalPortal = dynamic(() => import('components/ModalPortal'), {
+const Portal = dynamic(() => import('components/Portal'), {
   ssr: false,
 });
 import PdfBtn from 'components/Button/organism/PdfBtn';
@@ -14,8 +14,17 @@ import { css } from '@emotion/react';
 import MemoCanvas from 'components/MemoCanvas';
 import OpenCanvasBtn from 'components/Button/organism/OpenCanvasBtn';
 import MemoShownBtn from 'components/Button/organism/MemoShownBtn';
+import useRecoilImmerState from 'hooks/useImmerState';
+import { indexedDBAtom } from 'recoil/IndexedDB';
+import useCheckIndexedDB from 'hooks/useCheckIndexedDB';
+import useRestoreScroll from 'hooks/useRestoreScroll';
 
 const IndexPage: NextPage = () => {
+  const [database, setDatabase] = useRecoilImmerState(indexedDBAtom);
+  useCheckIndexedDB(database, setDatabase, 'resume');
+
+  useRestoreScroll(); //새로고침 시 스크롤 위치 초기화.
+
   return (
     <Wrapper>
       <GradientHeader />
@@ -24,13 +33,13 @@ const IndexPage: NextPage = () => {
         <MemoCanvas />
         <Content />
 
-        <ModalPortal>
+        <Portal>
           <Options>
             <MemoShownBtn />
             <OpenCanvasBtn />
             <PdfBtn />
           </Options>
-        </ModalPortal>
+        </Portal>
       </Main>
     </Wrapper>
   );

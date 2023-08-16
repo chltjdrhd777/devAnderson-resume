@@ -26,6 +26,7 @@ export const colors = {
   waringColor: '#ff3838',
   starColor: '#fd4',
   beige: '#f6d77d',
+  beigeRed: '#ffd4c9',
 } as const;
 
 export const gradients = {
@@ -102,8 +103,20 @@ export const animations = {
       opacity:0; 
       transform:scale(0);
     }
-    100%{
+    30%{
       opacity:1;
+      transform: scale(1);
+    }
+    40%{
+      transform: scale(0.85);
+    }
+    60%{
+      transform: scale(1.05);
+    }
+    80%{
+      transform: scale(1);
+    }
+    100%{
       transform: scale(1);
     }
   `,

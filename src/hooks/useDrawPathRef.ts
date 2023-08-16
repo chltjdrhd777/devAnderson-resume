@@ -19,8 +19,11 @@ function useDrawPathRef() {
       drawPathRef.current.push(imageData);
     }
   };
+  const setDrawPathRef = (value: ImageData[]) => {
+    drawPathRef.current = value;
+  };
 
-  return { drawPathRef, pushNewImageData };
+  return { drawPathRef, pushNewImageData, setDrawPathRef };
 }
 
 export default useDrawPathRef;
