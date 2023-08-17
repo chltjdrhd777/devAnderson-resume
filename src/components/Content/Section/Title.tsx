@@ -24,7 +24,7 @@ function Index() {
         </span>
 
         <span className="animate">
-          블록체인 스타트업에서 1년차 프론트엔드 개발자로&nbsp;
+          블록체인 스타트업에서 2년차 프론트엔드 개발자로&nbsp;
           <span className="bold pointColor">Next.js, React-native, Node.js 등을 사용</span>
           하여 웹 및 앱 서비스를 기획하고 개발하는 업무를 하였으며 기존 코드를 리펙토링하고 성능을 개선 및 버그 수정
           업무를 병행하였습니다.

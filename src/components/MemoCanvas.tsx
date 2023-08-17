@@ -1,9 +1,9 @@
-import React, { CanvasHTMLAttributes, forwardRef, useLayoutEffect } from 'react';
+import React, { CanvasHTMLAttributes, forwardRef, useEffect, useLayoutEffect } from 'react';
 
 import useCanvasDrawing from 'hooks/useCanvasDrawing';
 import { useSelector } from 'redux/store';
-import { useRecoilValue } from 'recoil';
-import { isClearMemoTriggeredAtom, menuConfigAtom } from 'recoil/memo';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { isClearMemoTriggeredAtom, memoCanvasHandlerAtom, menuConfigAtom } from 'recoil/memo';
 import { checkMobile } from 'helper/checkMobile';
 import preventCanvasDefault from 'helper/preventCanvasDefault';
 import EraserCanvas from './EraserCanvas';
@@ -22,6 +22,7 @@ function Index() {
   const memo = useSelector((state) => state.user.memo); //사용자별 영속성이어야 하기에 Redux-persist로 로컬관리
   const { drawType } = useRecoilValue(menuConfigAtom);
   const [isClearMemoTriggered, setIsClearMemoTriggered] = useRecoilImmerState(isClearMemoTriggeredAtom);
+  const setMemoCanvasHandler = useSetRecoilState(memoCanvasHandlerAtom);
 
   const {
     isCanvasOpen,
@@ -36,7 +37,17 @@ function Index() {
     onDrawingForMobile,
     stopDrawingForMobile,
     clearDrawing,
+    goBackwardPath,
+    goForwardPath,
+    database,
   } = useCanvasDrawing();
+
+  useEffect(() => {
+    setMemoCanvasHandler({
+      goForwardPath,
+      goBackwardPath,
+    });
+  }, [database]);
 
   const isMemoShown = (memo.isMemoShown && drawPathLength !== 0) || isCanvasOpen;
   const canvasAttrs = {

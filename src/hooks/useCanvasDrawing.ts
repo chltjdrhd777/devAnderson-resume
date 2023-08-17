@@ -1,7 +1,6 @@
 import { integerDiff } from 'helper/checkDiff';
 import { checkMobile } from 'helper/checkMobile';
 import { converURLToImageData } from 'helper/converURLToImageData';
-import { debounce } from 'helper/debounce';
 import React, { useEffect, useRef, useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import {
@@ -40,7 +39,9 @@ function useCanvasDrawing() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasCtxRef = useRef<CanvasRenderingContext2D | null>(null);
 
-  const { drawPathRef, setDrawPathRef, pushNewImageData } = useDrawPathRef();
+  const { drawPathRef, setDrawPathRef, pushNewImageData, goBackwardPath, goForwardPath } = useDrawPathRef(redraw, () =>
+    saveDrawing(true),
+  );
   const drawStartCoordRef = useRef<{ x: number | null; y: number | null }>({ x: null, y: null });
   const memoPrevImageSize = useRef<{ width: number; height: number }>({
     width: 0,
@@ -61,24 +62,24 @@ function useCanvasDrawing() {
     memoPrevImageSize.current.height = imageData.height;
   };
 
-  const updateMemorizedImageData = async (imageData: ImageData) => {
-    const { width: newImageWidth, height: newIamgeHeight } = imageData;
+  const updateMemorizedImageData = async (newMemoImage: ImageData) => {
+    const { width: newImageWidth, height: newIamgeHeight } = newMemoImage;
     const { width: memorizedPrevWidth, height: memorizedPrevHeight } = memoPrevImageSize.current;
+    const isPrevMemoBigger = newImageWidth < memorizedPrevWidth || newIamgeHeight < memorizedPrevHeight;
 
     // 이전까지 그리던 사이즈보다 작은 사이즈에서 그리게 될 경우
     // drawPathRef에 기록되는 가장 마지막의 기록 = 최대사이즈 스냅샷이므로 이것만 저장하여 최종 저장 데이터 용량 최적화
     // 해당 최적화가 없을 경우, 모든 그려진 drawPath에 대해서 redraw하게되므로 수정한다.
-
-    if (newImageWidth < memorizedPrevWidth || newIamgeHeight < memorizedPrevHeight) {
-      const lastDrawPath = drawPathRef.current[drawPathRef.current.length - 1]; //반응형 전 최대크기 스냅샷
-      memorizedImageData.current.push(lastDrawPath);
+    if (isPrevMemoBigger) {
+      const biggerMemoImage = drawPathRef.current[drawPathRef.current.length - 1]; //반응형 전 최대크기 스냅샷
+      memorizedImageData.current.push(biggerMemoImage);
 
       // 추가 최적화
       // 가능성은 적지만, 누군가가 웹사이트에서 메모기능을 쓸 때 화면 크기를 반복적으로 줄였다 늘였다를 반복하며 그릴 경우
       // memorized되는 케이스가 점점 늘어나게 된다 => 저장할 때 오버헤드가 발생할 수 있다.
       // 따라서, 계속 지속적으로 memorized 되는 이미지의 갯수가 늘어나기 보다, memorized 되어있는 배열에서 최대 사이즈의 캔버스를 만들고, 메모를 병합하여 하나의 메모만 관리한다.
       // 해당 작업은 반응형이 발생하는 순간에 항상 2개의 캔버스에 대해서만 발생할 것이기 때문에, 비교적 부담이 적다.(현재이미지, 기존 최대크기 이미지)
-      const { mergedImageData, dataURL } = genMergedImageData([imageData, lastDrawPath]);
+      const { mergedImageData, dataURL } = genMergedImageData([newMemoImage, biggerMemoImage]);
       memorizedImageData.current = [mergedImageData];
       mergedDataURL.current = dataURL;
     }
@@ -100,6 +101,7 @@ function useCanvasDrawing() {
         setDrawPathLength(drawPathRef.current.length);
       }); //실행 순서가 중요하여 async를 이용한 then 체이닝 적용.
   };
+
   const applymemoContextAttr = () => {
     const context = canvasCtxRef.current;
 
@@ -192,17 +194,19 @@ function useCanvasDrawing() {
     }
   };
 
-  const saveDrawing = () => {
+  function saveDrawing(rollback?: boolean) {
     // resize를 하면 canvas의 크기가 바껴 imageData가 사라지기에, 해당 Data를 ref에 기록해둔다.
     const canvas = canvasRef.current;
     const context = canvasCtxRef.current;
-    const imageData = context?.getImageData(0, 0, canvas.width, canvas.height);
 
-    updateDrawPathRef(imageData);
+    if (!rollback) {
+      const imageData = context?.getImageData(0, 0, canvas.width, canvas.height);
+      updateDrawPathRef(imageData);
+    }
 
     // indexedDB
     const saveDataUrlToIndexedDb = (canvas: HTMLCanvasElement) => {
-      const genDataList = () => {
+      const genDataUrlList = () => {
         const baseList = [];
 
         if (mergedDataURL.current) {
@@ -213,7 +217,7 @@ function useCanvasDrawing() {
         return baseList;
       };
 
-      const dataUrlList = genDataList();
+      const dataUrlList = genDataUrlList();
 
       const saveData = {
         snapshot: indexing.memo,
@@ -230,7 +234,7 @@ function useCanvasDrawing() {
     };
 
     saveDataUrlToIndexedDb(canvas);
-  };
+  }
 
   //! mobile device(phone or tablet) handler
   const checkPointerType = (pointerType: 'mouse' | 'touch' | 'pen', callback: Function) => {
@@ -281,7 +285,7 @@ function useCanvasDrawing() {
     });
   };
 
-  const redraw = () => {
+  function redraw() {
     const canvas = canvasRef.current;
     const context = canvasCtxRef.current;
     context?.clearRect(0, 0, canvas.width, canvas.height);
@@ -289,7 +293,7 @@ function useCanvasDrawing() {
     drawPathRef.current.forEach((imageData) => {
       context?.putImageData(imageData, 0, 0);
     });
-  };
+  }
   const updateCanvasSize = (canvas: HTMLCanvasElement | null) => {
     canvas.width = canvas.parentElement.clientWidth;
     canvas.height = canvas.parentElement.clientHeight;
@@ -336,6 +340,9 @@ function useCanvasDrawing() {
     onDrawingForMobile,
     stopDrawingForMobile,
     clearDrawing,
+    goBackwardPath,
+    goForwardPath,
+    database,
   };
 }
 
