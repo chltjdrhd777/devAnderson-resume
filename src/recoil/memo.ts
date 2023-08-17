@@ -3,9 +3,13 @@ import { atom } from 'recoil';
 import { colors } from 'styles/theme';
 
 // type
-export interface memoCanvasAtom {
+export interface MemoCanvasAtom {
   isCanvasOpen: boolean;
   canSaveMemo: boolean;
+}
+export interface MemoCanvasHandlerAtom {
+  goBackwardPath: () => void;
+  goForwardPath: () => void;
 }
 
 export interface MenuConfigAtom {
@@ -18,12 +22,16 @@ export interface MenuConfigAtom {
 }
 
 // atom
-export const memoCanvasAtom = atom<memoCanvasAtom>({
+export const memoCanvasAtom = atom<MemoCanvasAtom>({
   key: 'memoCanvasAtom',
   default: {
     isCanvasOpen: false,
     canSaveMemo: true,
   },
+});
+export const memoCanvasHandlerAtom = atom<Partial<MemoCanvasHandlerAtom>>({
+  key: 'memoCanvasHandlerAtom',
+  default: {},
 });
 
 export const memoLengthAtom = atom<number>({

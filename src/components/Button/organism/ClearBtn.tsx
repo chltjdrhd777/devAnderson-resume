@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Option from '../Molecule/Option';
 import { isClearMemoNoticeModalOpenAtom, isClearMemoTriggeredAtom, memoCanvasAtom, memoLengthAtom } from 'recoil/memo';
 import useRecoilImmerState from 'hooks/useImmerState';
-import { GrClearOption } from 'react-icons/gr';
+import { LuTrash2 } from 'react-icons/lu';
 import { css } from '@emotion/react';
 import { genMedia } from 'styles/theme';
 import { useRecoilValue } from 'recoil';
@@ -52,7 +52,7 @@ function ClearBtn() {
   return (
     <>
       <Option onClick={onOptionClick} additialCSS={additonalCSS(memoCanvas.isCanvasOpen, memoLength)}>
-        <GrClearOption />
+        <LuTrash2 />
       </Option>
 
       {isClearNoticeModalOpen && (

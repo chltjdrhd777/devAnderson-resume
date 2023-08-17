@@ -15,6 +15,18 @@ export const BaseButtonIconContainer = styled.div`
   ${({ theme }) => theme.middle};
 `;
 
+export const SmallIconContainer = styled.div`
+  width: 2rem;
+  height: 2rem;
+  padding: 0.4rem;
+  border-radius: 100%;
+  border: 1px solid ${colors.footerColor};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${colors.black};
+`;
+
 export const BaseButton = styled.button`
   width: 5rem;
   height: 5rem;

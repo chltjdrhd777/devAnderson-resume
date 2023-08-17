@@ -4,9 +4,7 @@ import { checkMobile } from 'helper/checkMobile';
 import preventCanvasDefault from 'helper/preventCanvasDefault';
 import useRecoilImmerState from 'hooks/useImmerState';
 import React, { useEffect, useRef, useState } from 'react';
-
 import { menuConfigAtom, pickerCircleAtom } from 'recoil/memo';
-import { colors } from 'styles/theme';
 
 const ColorPicker = () => {
   const isMobile = checkMobile();
@@ -361,8 +359,6 @@ const ColorPicker = () => {
           onTouchCancel={ColorBarHandlers.onTouchEnd}
         />
       </ColorBarCanvasFrame>
-
-      <SelectedColor background={pickerCircle.selectedColor} />
     </Wrapper>
   );
 };
@@ -438,17 +434,5 @@ const Pointer = ({ direction }: { direction: 'left' | 'right' }) => {
     </PointerSVG>
   );
 };
-
-const SelectedColor = styled.div<{ background: string }>`
-  width: 2.7rem;
-  height: 2.7rem;
-  border: 1px solid ${colors.black};
-  border-radius: 100%;
-  background-color: ${({ background }) => background};
-
-  position: absolute;
-  bottom: -5.2rem;
-  left: -0.5rem;
-`;
 
 export default ColorPicker;
