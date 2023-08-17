@@ -124,7 +124,6 @@ function useIndexedDB({ dbName }: Params) {
     onError?: () => any;
   }
   const saveValue = ({ tableName, key, value, type, onSuccess, onError }: SaveValueParams) => {
-    console.log('세이브 할 때마다 db 확인해보자', database);
     if (!database) {
       console.error('no database');
       return;

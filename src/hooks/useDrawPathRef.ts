@@ -14,14 +14,11 @@ function useDrawPathRef(redraw: () => void, saveDrawing: () => void) {
   const goBackwardPath = () => {
     if (drawPathRef.current.length === 1) return;
     restDrawPathRef.current.push(drawPathRef.current.pop());
-
     redraw();
     saveDrawing();
   };
 
   const goForwardPath = () => {
-    console.log(drawPathRef, restDrawPathRef);
-
     if (restDrawPathRef.current.length === 0) return;
     drawPathRef.current.push(restDrawPathRef.current.pop());
     redraw();

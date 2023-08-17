@@ -66,7 +66,6 @@ function useCanvasDrawing() {
     const { width: newImageWidth, height: newIamgeHeight } = newMemoImage;
     const { width: memorizedPrevWidth, height: memorizedPrevHeight } = memoPrevImageSize.current;
     const isPrevMemoBigger = newImageWidth < memorizedPrevWidth || newIamgeHeight < memorizedPrevHeight;
-
     // 이전까지 그리던 사이즈보다 작은 사이즈에서 그리게 될 경우
     // drawPathRef에 기록되는 가장 마지막의 기록 = 최대사이즈 스냅샷이므로 이것만 저장하여 최종 저장 데이터 용량 최적화
     // 해당 최적화가 없을 경우, 모든 그려진 drawPath에 대해서 redraw하게되므로 수정한다.
@@ -78,21 +77,55 @@ function useCanvasDrawing() {
       // 가능성은 적지만, 누군가가 웹사이트에서 메모기능을 쓸 때 화면 크기를 반복적으로 줄였다 늘였다를 반복하며 그릴 경우
       // memorized되는 케이스가 점점 늘어나게 된다 => 저장할 때 오버헤드가 발생할 수 있다.
       // 따라서, 계속 지속적으로 memorized 되는 이미지의 갯수가 늘어나기 보다, memorized 되어있는 배열에서 최대 사이즈의 캔버스를 만들고, 메모를 병합하여 하나의 메모만 관리한다.
-      // 해당 작업은 반응형이 발생하는 순간에 항상 2개의 캔버스에 대해서만 발생할 것이기 때문에, 비교적 부담이 적다.(현재이미지, 기존 최대크기 이미지)
-      const { mergedImageData, dataURL } = genMergedImageData([newMemoImage, biggerMemoImage]);
+      // 해당 작업은 반응형이 발생하는 순간에 항상 3개의 캔버스에 대해서만 발생할 것이기 때문에, 비교적 부담이 적다.(현재이미지, 기존 이미지, 메모라이징되었던 최대사이즈 이미지)
+      const { mergedImageData, dataURL } = genMergedImageData([
+        newMemoImage,
+        biggerMemoImage,
+        ...memorizedImageData.current,
+      ]);
       memorizedImageData.current = [mergedImageData];
       mergedDataURL.current = dataURL;
     }
   };
+  const saveDataUrlToIndexedDb = ({ canvas, dataUrlList }: { canvas?: HTMLCanvasElement; dataUrlList?: string[] }) => {
+    const genDataUrlList = () => {
+      const baseList: string[] = [];
+
+      if (mergedDataURL.current) {
+        baseList.push(mergedDataURL.current);
+      }
+      baseList.push(canvas.toDataURL());
+
+      return baseList;
+    };
+
+    saveValue({
+      tableName: tableEnum.memo,
+      value: {
+        snapshot: indexing.memo,
+        dataUrlList: canvas ? genDataUrlList() : dataUrlList ?? [],
+      },
+      type: 'put',
+      onError: () => {
+        useSetMemoImpossible();
+      },
+    });
+  };
 
   const initDrawPath = async (value: Memo) => {
-    for (let dataUrl of value?.dataUrlList ?? []) {
-      const convertedDataUrl = await converURLToImageData(dataUrl);
-      convertedDataUrl instanceof ImageData && (await updateDrawPathRef(convertedDataUrl));
+    const dataUrlList = value?.dataUrlList ?? [];
+    const convertedImageDataList = await Promise.all(dataUrlList.map((url) => converURLToImageData(url)));
+    if (convertedImageDataList.length >= 2) {
+      const merging = genMergedImageData(convertedImageDataList);
+      saveDataUrlToIndexedDb({ dataUrlList: [merging.dataURL] });
+      await updateDrawPathRef(merging.mergedImageData);
+    } else {
+      convertedImageDataList.length && (await updateDrawPathRef(convertedImageDataList[0]));
     }
 
     updateCanvasSize(canvasRef.current);
   };
+
   const updateDrawPathRef = async (imageData: ImageData) => {
     await updateMemorizedImageData(imageData)
       .then(() => updatememoPrevImageSize(imageData))
@@ -194,46 +227,18 @@ function useCanvasDrawing() {
     }
   };
 
-  function saveDrawing(rollback?: boolean) {
+  async function saveDrawing(rollback?: boolean) {
     // resize를 하면 canvas의 크기가 바껴 imageData가 사라지기에, 해당 Data를 ref에 기록해둔다.
     const canvas = canvasRef.current;
     const context = canvasCtxRef.current;
 
     if (!rollback) {
       const imageData = context?.getImageData(0, 0, canvas.width, canvas.height);
-      updateDrawPathRef(imageData);
+      await updateDrawPathRef(imageData);
     }
 
     // indexedDB
-    const saveDataUrlToIndexedDb = (canvas: HTMLCanvasElement) => {
-      const genDataUrlList = () => {
-        const baseList = [];
-
-        if (mergedDataURL.current) {
-          baseList.push(mergedDataURL.current);
-        }
-        baseList.push(canvas.toDataURL());
-
-        return baseList;
-      };
-
-      const dataUrlList = genDataUrlList();
-
-      const saveData = {
-        snapshot: indexing.memo,
-        dataUrlList,
-      };
-      saveValue({
-        tableName: tableEnum.memo,
-        value: saveData,
-        type: 'put',
-        onError: () => {
-          useSetMemoImpossible();
-        },
-      });
-    };
-
-    saveDataUrlToIndexedDb(canvas);
+    saveDataUrlToIndexedDb({ canvas });
   }
 
   //! mobile device(phone or tablet) handler
@@ -288,7 +293,12 @@ function useCanvasDrawing() {
   function redraw() {
     const canvas = canvasRef.current;
     const context = canvasCtxRef.current;
-    context?.clearRect(0, 0, canvas.width, canvas.height);
+    context?.clearRect(
+      0,
+      0,
+      Math.max(canvas.width, memoPrevImageSize.current.width),
+      Math.max(canvas.height, memoPrevImageSize.current.height),
+    );
 
     drawPathRef.current.forEach((imageData) => {
       context?.putImageData(imageData, 0, 0);
