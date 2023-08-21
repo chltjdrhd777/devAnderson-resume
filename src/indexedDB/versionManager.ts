@@ -38,7 +38,7 @@ export class VersionManager {
   // 함수 prams로 전달받아서 return값을 객체로 하여 클로져 구현해도 무관.
   constructor(private setDatabase: SetDatabase, private db: IDBDatabase, private oldVersion: number) {}
 
-  update() {
+  async update() {
     // break가 없는 이유는, 해당 old버전 전까지 업데이트를 끌어올려야 하기 때문임.(전부 처리되어야 함)
     // 0은 초기 db가 클라이언트 스토리지에 없었을 경우
     switch (this.oldVersion) {

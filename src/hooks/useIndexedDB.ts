@@ -1,5 +1,3 @@
-import { useEffect, useState } from 'react';
-import useCheckIndexedDB from './useCheckIndexedDB';
 import {
   handleCreateErr,
   handleIndexErr,
@@ -98,17 +96,16 @@ function useIndexedDB({ dbName }: Params) {
         const transaction = handleTransactionErr(() => database?.transaction(tableName, 'readonly'));
         const table = handleObjectStoreErr(() => transaction?.objectStore(tableName));
         const index = handleIndexErr(() => table?.index(indexing));
-        const openCursor = handleOpenCursorErr(() => index?.openCursor(null, 'prev'));
-
-        if (openCursor) {
-          openCursor.onsuccess = (e) => {
-            const value = openCursor.result?.value;
+        const getValueByCursor = handleOpenCursorErr(() => {
+          const cursor = index?.openCursor(null, 'prev');
+          cursor.onsuccess = (e) => {
+            const value = cursor.result?.value;
             resolve(value);
           };
-          openCursor.onerror = (e) => {
+          cursor.onerror = (e) => {
             reject(new Error('Failed to retrieve last value from object store'));
           };
-        }
+        });
       } catch (err) {
         reject({ reason: 'uncaught error', err });
       }

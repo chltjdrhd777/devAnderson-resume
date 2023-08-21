@@ -1,12 +1,43 @@
 import { Dispatch, SetStateAction, useEffect } from 'react';
-import { VersionManager } from 'indexedDB/versionManager';
+import { VersionManager, indexing, tableEnum } from 'indexedDB/versionManager';
 import { useSetMemoImpossible } from 'recoil/memo';
+import useRecoilImmerState from './useImmerState';
+import { indexedDBVersionAtom } from 'recoil/IndexedDB';
+import { handleIndexErr, handleObjectStoreErr, handleOpenCursorErr, handleTransactionErr } from 'Error/indexedDB';
+
+const getLastValueFromTable = <T>(database: IDBDatabase, tableName: string, indexing: string) => {
+  return new Promise<T>((resolve, reject) => {
+    try {
+      if (!database) {
+        return resolve(undefined);
+      }
+
+      const transaction = handleTransactionErr(() => database?.transaction(tableName, 'readonly'));
+      const table = handleObjectStoreErr(() => transaction?.objectStore(tableName));
+      const index = handleIndexErr(() => table?.index(indexing));
+      const getValueByCursor = handleOpenCursorErr(() => {
+        const cursor = index?.openCursor(null, 'prev');
+        cursor.onsuccess = (e) => {
+          const value = cursor.result?.value;
+          resolve(value);
+        };
+        cursor.onerror = (e) => {
+          reject(new Error('Failed to retrieve last value from object store'));
+        };
+      });
+    } catch (err) {
+      reject({ reason: 'uncaught error', err });
+    }
+  });
+};
 
 function useCheckIndexedDB(
   database: IDBDatabase | null,
   setDatabase: Dispatch<SetStateAction<IDBDatabase>>,
   dbName: string,
 ) {
+  const [indexedDBVersion] = useRecoilImmerState(indexedDBVersionAtom);
+
   useEffect(() => {
     if (database !== null) {
       return;
@@ -26,7 +57,7 @@ function useCheckIndexedDB(
     }
 
     if (indexedDB) {
-      const request = (indexedDB as IDBFactory).open(dbName, 3);
+      const request = (indexedDB as IDBFactory).open(dbName, indexedDBVersion.latestVersion);
 
       request.onsuccess = (e) => {
         const db = request.result;
@@ -44,9 +75,11 @@ function useCheckIndexedDB(
       };
       request.onupgradeneeded = (e) => {
         // database merger (indexedDB 오픈하여 인스턴스 만든 후, 현 로컬의 indexedDB 확인시 DB가 없거나 버전이 낮으면 호출됨)
-        const db = request.result; // 이 콜백 실행 시점에선 open(dbName, 2) 에 대한 인스턴스 초기화 완료 상태.
+        const db = request.result;
         const versionManager = new VersionManager(setDatabase, db, e.oldVersion);
-        versionManager.update();
+        versionManager.update().then(() => {
+          getLastValueFromTable(db, tableEnum.memo, indexing.memo);
+        });
       };
     }
   }, []);

@@ -329,14 +329,6 @@ function useCanvasDrawing() {
     }
   }, [isMobile]);
 
-  useEffect(() => {
-    // 첫 진입시 IndexedDB가 초기화되는 것을 감지하고 그 안에 있는 데이터를 가져오는 로직
-    // useEffect 내에서 비동기 함수 호출을 위함이라 IIEF로 적용
-    (() => {
-      getLastValueFromTable<Memo>(tableEnum.memo, indexing.memo).then(initDrawPath);
-    })();
-  }, [database]);
-
   return {
     isCanvasOpen,
     canvasRef,
