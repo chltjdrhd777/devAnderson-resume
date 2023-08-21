@@ -2,15 +2,15 @@ import styled from '@emotion/styled';
 import { SmallIconContainer } from 'components/Button/Atom/round';
 import useRecoilImmerState from 'hooks/useImmerState';
 import React from 'react';
-import { memoCanvasHandlerAtom, pickerCircleAtom } from 'recoil/memo';
+import { pickerCircleAtom } from 'recoil/memo';
 import { colors } from 'styles/theme';
 import { RiArrowGoBackFill } from 'react-icons/ri';
 import { css } from '@emotion/react';
-import { useRecoilValue } from 'recoil';
+import useAddUndoRedo from 'hooks/useAddUndoRedo';
 
 function Sidebar() {
-  const [pickerCircle, setPickerCircle] = useRecoilImmerState(pickerCircleAtom);
-  const { goBackwardPath, goForwardPath } = useRecoilValue(memoCanvasHandlerAtom);
+  const [pickerCircle] = useRecoilImmerState(pickerCircleAtom);
+  const { goBackwardPath, goForwardPath } = useAddUndoRedo();
 
   return (
     <Wrapper>
