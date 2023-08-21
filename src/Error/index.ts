@@ -4,10 +4,11 @@
 // 부모에서 전체적으로 try~catch로 잡아버려서 단순히 에러로 죽는 것을 방지해도 상관없지만, 이렇게 되면 catch 구분에 모든 처리 로직들이 누적되어 복잡도가 올라가는 문제가 발생했다.
 // 따라서, 특정할 수 있는 에러가 존재한다면 커스텀하여 관리할 수 있도록 수정하였다.
 
-export class CustomError extends Error {
-  constructor(readonly message: string, public name: string) {
-    super(message);
+export class CustomError {
+  constructor(public readonly message: string, public readonly name: string, public readonly err: any) {
+    this.message = message;
     this.name = name;
+    this.err = err;
   }
 }
 
@@ -19,7 +20,7 @@ export const customErrHandlerGenerator = (targetErrName: string, message: string
     try {
       return targetFunc();
     } catch (err) {
-      throw new CustomError(message, targetErrName); // 받아오는 에러객체가 아닌, 커스텀 에러객체를 throw
+      throw new CustomError(message, targetErrName, err); // 받아오는 에러객체가 아닌, 커스텀 에러객체를 throw
     }
   }) as Closure;
 
