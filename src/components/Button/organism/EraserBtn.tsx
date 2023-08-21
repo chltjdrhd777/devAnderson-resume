@@ -2,8 +2,6 @@ import React from 'react';
 import Option from '../Molecule/Option';
 import { memoCanvasAtom, menuConfigAtom } from 'recoil/memo';
 import useRecoilImmerState from 'hooks/useImmerState';
-import { GoPencil } from 'react-icons/go';
-import { AiOutlineCheck } from 'react-icons/ai';
 import { BsFillEraserFill } from 'react-icons/bs';
 import { css } from '@emotion/react';
 import { genMedia } from 'styles/theme';
