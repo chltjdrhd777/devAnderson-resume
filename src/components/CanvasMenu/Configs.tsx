@@ -5,6 +5,7 @@ import { GoPencil } from 'react-icons/go';
 import useRecoilImmerState from 'hooks/useImmerState';
 import { menuConfigAtom } from 'recoil/memo';
 import { BsFillEraserFill } from 'react-icons/bs';
+import ModeChangeBtn from 'components/Button/organism/ModeChangeBtn';
 function Configs() {
   const [menuConfig, setMenuConfig] = useRecoilImmerState(menuConfigAtom);
 
@@ -43,6 +44,8 @@ function Configs() {
         onChange={(e) => onChangeSize(e, 'eraser')}
         step={0.0001}
       />
+
+      <ModeChangeBtn />
     </Wrapper>
   );
 }
