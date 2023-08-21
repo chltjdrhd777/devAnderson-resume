@@ -25,14 +25,11 @@ function ModeChangeBtn() {
   ] as const;
   const [memoConfig, setMemoConfig] = useRecoilImmerState(menuConfigAtom);
 
-  useEffect(() => {
-    console.log(memoConfig);
-  });
-
   return (
     <Wrapper>
       {initialState.map((state) => (
         <Template
+          key={state.id}
           Icon={state.icon}
           text={state.text}
           active={memoConfig.drawType === state.drawType}
