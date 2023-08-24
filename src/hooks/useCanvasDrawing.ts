@@ -115,12 +115,20 @@ function useCanvasDrawing() {
   const initDrawPath = async (value: Memo) => {
     const dataUrlList = value?.dataUrlList ?? [];
     const convertedImageDataList = await Promise.all(dataUrlList.map((url) => converURLToImageData(url)));
-    if (convertedImageDataList.length >= 2) {
+    const genEmptyCanvas = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 0;
+      canvas.height = 0;
+      const context = canvas.getContext('2d');
+      return context.getImageData(0, 0, 1, 1);
+    };
+
+    if (convertedImageDataList.length) {
       const merging = genMergedImageData(convertedImageDataList);
       saveDataUrlToIndexedDb({ dataUrlList: [merging.dataURL] });
       await updateDrawPathRef(merging.mergedImageData);
     } else {
-      convertedImageDataList.length && (await updateDrawPathRef(convertedImageDataList[0]));
+      await updateDrawPathRef(genEmptyCanvas());
     }
 
     updateCanvasSize(canvasRef.current);
