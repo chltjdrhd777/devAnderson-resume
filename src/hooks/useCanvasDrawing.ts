@@ -154,6 +154,26 @@ function useCanvasDrawing() {
     context.lineWidth = penSize;
   };
 
+  const setStartDrawingCoord = (
+    e: React.MouseEvent<HTMLCanvasElement, MouseEvent> | React.PointerEvent<HTMLCanvasElement>,
+  ) => {
+    drawStartCoordRef.current = { x: e.pageX, y: e.pageY };
+  };
+
+  const setMoveTo = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent> | React.PointerEvent<HTMLCanvasElement>) => {
+    const context = canvasCtxRef.current;
+    context?.beginPath();
+    context.moveTo(e.pageX, e.pageY);
+  };
+
+  const onDrawingStart = (
+    e: React.MouseEvent<HTMLCanvasElement, MouseEvent> | React.PointerEvent<HTMLCanvasElement>,
+  ) => {
+    setIsDrawing(true);
+    setStartDrawingCoord(e);
+    setMoveTo(e);
+  };
+
   const resetDrawingData = () => {
     setIsDrawing(false);
     drawStartCoordRef.current = { x: null, y: null };
@@ -177,25 +197,15 @@ function useCanvasDrawing() {
 
   //! mouse event handler
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
-    setIsDrawing(true);
-    const context = canvasCtxRef.current;
-    const x = e.nativeEvent.pageX;
-    const y = e.nativeEvent.pageY;
-    drawStartCoordRef.current = { x, y };
-
-    context?.beginPath();
-    context?.moveTo(x, y);
+    onDrawingStart(e);
   };
 
   const onDrawing = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
     const context = canvasCtxRef.current;
-    const x = e.nativeEvent.pageX;
-    const y = e.nativeEvent.pageY;
+    const x = e.pageX;
+    const y = e.pageY;
 
-    if (isCanvasOpen && isDrawing) {
-      //더블클릭으로 인한 드로잉을 막기 위해 isDrawing 상태를 조건으로 걸어둔다.
-      // 그리지 않을 때, 마우스가 움직이면 canvas의 시작점을 reset하고(beginPath) 재설정(moveTo).
-
+    if (isCanvasOpen) {
       if (!isDrawing) {
         context?.beginPath();
         context?.moveTo(x, y);
@@ -257,25 +267,17 @@ function useCanvasDrawing() {
   };
   const startDrawingForMobile = (e: React.PointerEvent<HTMLCanvasElement>) => {
     checkPointerType(e.pointerType, () => {
-      setIsDrawing(true);
-      const context = canvasCtxRef.current;
-      const x = e.pageX;
-      const y = e.pageY;
-      drawStartCoordRef.current = { x, y };
-
-      context?.beginPath();
-      context?.moveTo(x, y);
+      onDrawingStart(e);
     });
   };
   const onDrawingForMobile = (e: React.PointerEvent<HTMLCanvasElement>) => {
     checkPointerType(e.pointerType, () => {
-      if (isDrawing && isCanvasOpen) {
-        const context = canvasCtxRef.current;
-        const x = e.pageX;
-        const y = e.pageY;
+      const context = canvasCtxRef.current;
+      const x = e.pageX;
+      const y = e.pageY;
 
+      if (isCanvasOpen) {
         applymemoContextAttr();
-
         context?.lineTo(x, y);
         context?.stroke();
       }

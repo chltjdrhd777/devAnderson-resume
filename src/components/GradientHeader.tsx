@@ -15,7 +15,7 @@ function GradientHeader() {
   };
 
   return (
-    <Gradient className={scroll && 'faint'}>
+    <Gradient className={scroll && 'faint'} id="graident-header">
       <Source target="blank" href="https://github.com/chltjdrhd777/devAnderson-resume">
         Powered by devAnderson-resume
       </Source>
