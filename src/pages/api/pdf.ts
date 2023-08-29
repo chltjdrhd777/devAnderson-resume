@@ -1,8 +1,15 @@
-import puppeteer from 'puppeteer';
+// import puppeteer from 'puppeteer';
+import chromium from 'chrome-aws-lambda';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
-  const browser = await puppeteer.launch();
+  const browser = await chromium.puppeteer.launch({
+    args: [...chromium.args, '--hide-scrollbars'],
+    // defaultViewport: chromium.defaultViewport,
+    executablePath: await chromium.executablePath,
+    headless: true,
+    ignoreHTTPSErrors: true,
+  });
   const HOST = process.env.HOST;
   try {
     const page = await browser.newPage();
@@ -17,7 +24,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       const animated = document.querySelectorAll('.animate');
       animated.forEach((el) => el.classList.add('fadeIn'));
     });
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(500);
 
     const pdfBuffer = await page.pdf({
       format: 'A4',
