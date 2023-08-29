@@ -1,16 +1,22 @@
 // import puppeteer from 'puppeteer';
 import chromium from 'chrome-aws-lambda';
+import puppeteer from 'puppeteer-core';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
-  const browser = await chromium.puppeteer.launch({
-    args: [...chromium.args, '--hide-scrollbars'],
-    // defaultViewport: chromium.defaultViewport,
-    executablePath: await chromium.executablePath,
-    headless: true,
-    ignoreHTTPSErrors: true,
-  });
   const HOST = process.env.HOST;
+
+  const browser = await puppeteer.launch({
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+    args: ['--no-sandbox'],
+    // args: [...chromium.args, '--hide-scrollbars'],
+    // defaultViewport: chromium.defaultViewport,
+    // executablePath: await chromium.executablePath,
+    // headless: true,
+    // ignoreHTTPSErrors: true,
+    // ignoreDefaultArgs: ['--disable-extensions', '--no-sandbox'],
+  });
+
   try {
     const page = await browser.newPage();
     await page.goto(HOST, { waitUntil: 'networkidle0' });
