@@ -13,11 +13,28 @@ function PdfBtn() {
   const DELAY = 2300; // 로딩 프로세스 시간
 
   async function downloadPDF() {
-    const downloadLink = document.createElement('a');
-    const fileName = '프론트엔드_최우철';
-    downloadLink.href = `/pdf/${fileName}.pdf`;
-    downloadLink.download = fileName;
-    downloadLink.click();
+    // const downloadLink = document.createElement('a');
+    // const fileName = '프론트엔드_최우철';
+    // downloadLink.href = `/pdf/${fileName}.pdf`;
+    // downloadLink.download = fileName;
+    // downloadLink.click();
+
+    try {
+      console.log('다운로드 시작');
+
+      const response = await fetch('/api/pdf');
+      const pdfBlob = await response.blob();
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'generated-pdf.pdf'; // 다운로드될 파일 이름 설정
+      link.click();
+
+      // 사용이 끝나면 URL 객체를 정리합니다.
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('에러발생', err);
+    }
   }
 
   function genDashOffset(percentage: number) {
@@ -28,8 +45,8 @@ function PdfBtn() {
   const { process, startProcessing } = useProcess(downloadPDF);
   const { scroll } = useScrollAnimation();
 
-  function onHandleClick() {
-    startProcessing(DELAY);
+  async function onHandleClick() {
+    startProcessing(0);
   }
 
   return (

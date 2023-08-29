@@ -26,26 +26,26 @@ export function useProcess(callbacks: Function[] | Function) {
 
   function setProcessResult(type: 'success' | 'fail') {
     if (type === 'success') {
-      setProcess(prev => {
+      setProcess((prev) => {
         prev.isSuccess = true;
       });
     }
 
     if (type === 'fail') {
-      setProcess(prev => {
+      setProcess((prev) => {
         prev.isError = true;
       });
     }
 
     // loading 종료
-    setProcess(prev => {
+    setProcess((prev) => {
       prev.isLoading = false;
       prev.loadingIndicator = 0;
     });
   }
 
   function setLoadingIndicator(value: number) {
-    setProcess(prev => {
+    setProcess((prev) => {
       prev.loadingIndicator += value;
     });
   }
@@ -57,11 +57,12 @@ export function useProcess(callbacks: Function[] | Function) {
     //첫 시작 시, 상태 초기화하고 시작하기.
     reset();
 
-    setProcess(prev => {
+    setProcess((prev) => {
       prev.isLoading = true;
     });
 
-    await new Promise(resolve => {
+    // 너무 다운로드가 빨라서 임시로 로딩 바를 보여주기 위해 걸어둔 딜레이 로직
+    await new Promise((resolve) => {
       const timerId = setInterval(() => setLoadingIndicator(1000), 1000);
 
       setTimeout(() => {
@@ -77,7 +78,7 @@ export function useProcess(callbacks: Function[] | Function) {
       }
 
       for (let callback of callbacks) {
-        callback();
+        await callback();
       }
       setProcessResult('success');
     } catch (err) {

@@ -35,13 +35,15 @@ const IndexPage: NextPage = () => {
         <Content />
 
         <Portal>
-          <CanvasMenu />
+          <PortalContainer id="portal-container">
+            <CanvasMenu />
 
-          <Options>
-            <MemoShownBtn />
-            <OpenCanvasBtn />
-            <PdfBtn />
-          </Options>
+            <Options>
+              <MemoShownBtn />
+              <OpenCanvasBtn />
+              <PdfBtn />
+            </Options>
+          </PortalContainer>
         </Portal>
       </Main>
     </Wrapper>
@@ -62,6 +64,8 @@ const Main = styled.main`
 
   ${({ theme }) => theme.centerCol};
 `;
+
+const PortalContainer = styled.div``;
 
 const Options = styled.div`
   ${({ theme }) => theme.centerCol};
