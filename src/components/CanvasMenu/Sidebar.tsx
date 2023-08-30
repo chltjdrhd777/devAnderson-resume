@@ -65,6 +65,7 @@ const SmallIcon = styled(SmallIconContainer)<{ reverse?: boolean; active?: boole
     z-index: 100;
     font-size: 1rem;
     opacity: 1;
+    font-weight: 500;
   }
 
   ${({ reverse, active }) => {

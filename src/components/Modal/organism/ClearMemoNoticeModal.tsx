@@ -85,6 +85,7 @@ const WarningIcon = styled.div`
 
 const Title = styled.h2`
   font-weight: bold;
+  white-space: nowrap;
   color: ${colors.black};
   margin-top: 3.5rem;
 `;
@@ -93,6 +94,7 @@ const Description = styled.p`
   margin-top: 2.2rem;
   font-size: 2rem;
   text-align: center;
+  word-break: keep-all;
 `;
 
 const Buttons = styled.div`
