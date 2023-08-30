@@ -2,7 +2,7 @@ import styled from '@emotion/styled';
 import { colors } from 'styles/theme';
 
 export const BaseModalContent = styled.div`
-  width: 80%;
+  width: 86%;
   height: 90%;
 
   max-width: 40rem;
