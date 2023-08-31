@@ -15,6 +15,6 @@ export function converURLToImageData(url: string | null) {
       },
       false,
     );
-    image.addEventListener('error', () => resolve(null));
+    image.addEventListener('error', () => reject(null));
   });
 }

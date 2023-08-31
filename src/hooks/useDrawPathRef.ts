@@ -38,7 +38,11 @@ function useDrawPathRef(redraw: () => void, saveDrawing: () => void) {
     drawPathRef.current = value;
   };
 
-  return { drawPathRef, pushNewImageData, setDrawPathRef, goBackwardPath, goForwardPath };
+  const clearRestDrawPath = () => {
+    restDrawPathRef.current = [];
+  };
+
+  return { drawPathRef, pushNewImageData, setDrawPathRef, goBackwardPath, goForwardPath, clearRestDrawPath };
 }
 
 export default useDrawPathRef;
