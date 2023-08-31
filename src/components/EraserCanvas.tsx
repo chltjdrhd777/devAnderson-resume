@@ -77,12 +77,14 @@ interface EraserCanvasHandlersProps {
   };
 }
 class EraserCanvasHandlers {
+  protected isEraseTargetExist = false;
   protected constructor(
     protected refs: EraserCanvasHandlersProps['refs'],
     protected states: EraserCanvasHandlersProps['states'],
     protected setters: EraserCanvasHandlersProps['setters'],
   ) {}
   protected resetEraserData = () => {
+    this.isEraseTargetExist = false;
     this.setters.setIsEraserDown(false);
     this.refs.eraserCanvasCtxRef.current.clearRect(
       0,
@@ -105,12 +107,19 @@ class EraserCanvasHandlers {
   protected eraseMemo = (params: { x?: number; y?: number; size: number }) => {
     const { x, y, size } = params;
     const context = this.refs.memoCanvasCtxRef.current;
-    context.globalCompositeOperation = 'destination-out'; //cantext의 그려진 값이 서로 겹칠 경우, 겹쳐진 부분은 보이지 않게 설정.
-    context.beginPath();
-    context.arc(x, y, size, 0, Math.PI * 2);
-    context.fill();
-    context.closePath();
-    context.globalCompositeOperation = 'source-over'; //기본값
+
+    const pixelData = context.getImageData(x - size, y - size, size * 2, size * 2).data;
+    const hasPixelData = pixelData.some((value) => value !== 0); // Check if any pixel value is non-zero
+
+    if (hasPixelData) {
+      this.isEraseTargetExist = true;
+      context.globalCompositeOperation = 'destination-out'; //cantext의 그려진 값이 서로 겹칠 경우, 겹쳐진 부분은 보이지 않게 설정.
+      context.beginPath();
+      context.arc(x, y, size, 0, Math.PI * 2);
+      context.fill();
+      context.closePath();
+      context.globalCompositeOperation = 'source-over'; //기본값
+    }
   };
 
   onMouseDown = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
@@ -124,7 +133,6 @@ class EraserCanvasHandlers {
     this.refs.eraseLastCoords.current = { x: eraseData.x, y: eraseData.y };
     this.genEraserCircle(eraseData);
     this.eraseMemo(eraseData);
-    this.setters.saveDrawing();
   };
 
   onMouseMove = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
@@ -141,8 +149,8 @@ class EraserCanvasHandlers {
 
   onMouseUp = () => {
     if (this.states.isEraserDown) {
+      this.isEraseTargetExist && this.setters.saveDrawing();
       this.resetEraserData();
-      this.setters.saveDrawing();
     }
   };
 
@@ -157,7 +165,6 @@ class EraserHandlersSupportingMobile extends EraserCanvasHandlers {
   }
 
   checkPointerType = (pointerType: 'mouse' | 'touch' | 'pen', callback: Function) => {
-    console.log(pointerType, this.states.menuConfig.drawType);
     if (pointerType === this.states.menuConfig.drawType) {
       callback();
     }

@@ -39,9 +39,8 @@ function useCanvasDrawing() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasCtxRef = useRef<CanvasRenderingContext2D | null>(null);
 
-  const { drawPathRef, setDrawPathRef, pushNewImageData, goBackwardPath, goForwardPath } = useDrawPathRef(redraw, () =>
-    saveDrawing(true),
-  );
+  const { drawPathRef, setDrawPathRef, pushNewImageData, goBackwardPath, goForwardPath, clearRestDrawPath } =
+    useDrawPathRef(redraw, () => saveDrawing(true));
   const drawStartCoordRef = useRef<{ x: number | null; y: number | null }>({ x: null, y: null });
   const memoPrevImageSize = useRef<{ width: number; height: number }>({
     width: 0,
@@ -112,23 +111,24 @@ function useCanvasDrawing() {
     });
   };
 
+  const initEmptyCanvas = async () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 0;
+    canvas.height = 0;
+    const context = canvas.getContext('2d');
+
+    await updateDrawPathRef(context.getImageData(0, 0, 1, 1));
+  };
+
   const initDrawPath = async (value: Memo) => {
     const dataUrlList = value?.dataUrlList ?? [];
     const convertedImageDataList = await Promise.all(dataUrlList.map((url) => converURLToImageData(url)));
-    const genEmptyCanvas = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 0;
-      canvas.height = 0;
-      const context = canvas.getContext('2d');
-      return context.getImageData(0, 0, 1, 1);
-    };
-
     if (convertedImageDataList.length) {
       const merging = genMergedImageData(convertedImageDataList);
       saveDataUrlToIndexedDb({ dataUrlList: [merging.dataURL] });
       await updateDrawPathRef(merging.mergedImageData);
     } else {
-      await updateDrawPathRef(genEmptyCanvas());
+      initEmptyCanvas();
     }
 
     updateCanvasSize(canvasRef.current);
@@ -251,8 +251,11 @@ function useCanvasDrawing() {
     const context = canvasCtxRef.current;
 
     if (!rollback) {
+      // 만약 메모를 그리는 상황이었으면(rollback에 주어지는 인자 없음) 해당 캔버스 이미지를 저장하고 drawPathRef에 기록해야하며
+      // resetDrawRef에 저장된 배열의 내용은 없어져야 하므로 초기화한다. (포토샵 그림그리다가 ctrl+z후 다시 그려보면 작업내역이 변경되는 것을 참조)
       const imageData = context?.getImageData(0, 0, canvas.width, canvas.height);
       await updateDrawPathRef(imageData);
+      clearRestDrawPath();
     }
 
     // indexedDB
@@ -342,8 +345,9 @@ function useCanvasDrawing() {
   useEffect(() => {
     // 첫 진입시 IndexedDB가 초기화되는 것을 감지하고 그 안에 있는 데이터를 가져오는 로직
     // useEffect 내에서 비동기 함수 호출을 위함이라 IIEF로 적용
+
     (() => {
-      getLastValueFromTable<Memo>(tableEnum.memo, indexing.memo).then(initDrawPath);
+      database && getLastValueFromTable<Memo>(tableEnum.memo, indexing.memo).then(initDrawPath);
     })();
   }, [database]);
 
