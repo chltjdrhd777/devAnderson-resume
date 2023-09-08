@@ -19,6 +19,7 @@ import { indexedDBAtom } from 'recoil/IndexedDB';
 import useCheckIndexedDB from 'hooks/useCheckIndexedDB';
 import useRestoreScroll from 'hooks/useRestoreScroll';
 import CanvasMenu from 'components/CanvasMenu';
+import HomeScroll from 'components/Scrollbar/Molecule/HomeScroll';
 
 const IndexPage: NextPage = () => {
   const [database, setDatabase] = useRecoilImmerState(indexedDBAtom);
@@ -36,6 +37,8 @@ const IndexPage: NextPage = () => {
 
         <Portal>
           <PortalContainer id="portal-container">
+            <HomeScroll />
+
             <CanvasMenu />
 
             <Options>

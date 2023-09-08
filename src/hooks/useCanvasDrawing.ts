@@ -185,6 +185,7 @@ function useCanvasDrawing() {
     canvasCtxRef.current?.clearRect(0, 0, width, height);
 
     setDrawPathRef([]);
+    clearRestDrawPath();
     drawStartCoordRef.current = { x: null, y: null };
     memoPrevImageSize.current = {
       width: 0,
@@ -366,6 +367,7 @@ function useCanvasDrawing() {
     clearDrawing,
     goBackwardPath,
     goForwardPath,
+    initEmptyCanvas,
     database,
   };
 }
