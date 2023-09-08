@@ -45,9 +45,7 @@ function GlobalStyle() {
     }
     html {
       font-size: 62.5%;
-      scroll-behavior: smooth;
       overflow-x: hidden;
-      /* overscroll-behavior: none; */
     }
     body {
       font-size: 1.6rem;

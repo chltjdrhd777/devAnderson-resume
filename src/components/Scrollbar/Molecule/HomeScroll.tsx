@@ -63,7 +63,7 @@ function HomeScroll() {
   useEffect(() => {
     window.scrollTo({
       top: scrollHeight * (thumbOffsetY / CUSTOM_SCROLL_HEIGHT),
-      behavior: 'instant',
+      behavior: 'auto',
     });
   }, [thumbOffsetY]);
 
