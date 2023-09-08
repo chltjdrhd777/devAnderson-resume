@@ -39,6 +39,7 @@ function Index() {
     clearDrawing,
     goBackwardPath,
     goForwardPath,
+    initEmptyCanvas,
     database,
   } = useCanvasDrawing();
 
@@ -68,6 +69,7 @@ function Index() {
   useLayoutEffect(() => {
     if (isClearMemoTriggered) {
       clearDrawing();
+      initEmptyCanvas();
       setIsClearMemoTriggered(false);
     }
   }, [isClearMemoTriggered]);
